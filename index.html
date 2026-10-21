@@ -1,0 +1,1481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Digit Dungeon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2dca8; --card:#fff4d6; --ink:#2b2240; --ink-soft:#6a5a86;
+  --btn:#fff4d6; --edge:#2b2240; --shadow:#2b2240;
+  --gold:#ffc83d; --gold-deep:#c98a12; --coral:#ff6464; --mint:#3fbf74; --sky:#4f8cf0; --plum:#3a2d5c;
+  --primary:#4f8cf0; --primary-ink:#ffffff;
+  --pixel:"Pixelify Sans",ui-rounded,"Trebuchet MS",system-ui,sans-serif;
+  --read:"Fredoka",ui-rounded,"Avenir Next","Trebuchet MS",system-ui,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1d1630; --card:#2f2550; --ink:#fff1d6; --ink-soft:#b9a9dc;
+    --btn:#3d3166; --edge:#0f0b1c; --shadow:#0f0b1c; --primary:#5b97f5;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1d1630; --card:#2f2550; --ink:#fff1d6; --ink-soft:#b9a9dc;
+  --btn:#3d3166; --edge:#0f0b1c; --shadow:#0f0b1c; --primary:#5b97f5;
+  color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  height:100%;margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--read);
+  -webkit-user-select:none;user-select:none;touch-action:manipulation;
+  overflow:hidden;-webkit-tap-highlight-color:transparent;
+}
+[hidden]{display:none!important}
+#app{height:100%;max-width:480px;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+img.px,canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* chunky board-game buttons */
+.btn{
+  font:inherit;font-family:var(--pixel);font-weight:600;font-size:18px;color:var(--ink);background:var(--btn);
+  border:3px solid var(--edge);border-radius:8px;box-shadow:0 4px 0 var(--shadow);
+  padding:10px 12px;min-height:48px;cursor:pointer;transition:transform .06s;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--shadow)}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn.primary{background:var(--primary);color:var(--primary-ink)}
+.btn.gold{background:var(--gold);color:#2b2240}
+.btn.ghost{background:transparent;box-shadow:none;border-color:transparent;text-decoration:underline;min-height:40px}
+.btn.small{font-size:15px;min-height:38px;padding:6px 10px}
+.btn.num,.btn small{font-family:var(--read)}
+.logo,h2,h3{font-family:var(--pixel)}
+.lang{display:flex;gap:8px;justify-content:center;margin-top:6px}
+.lang .btn{min-height:38px;font-size:15px;padding:4px 14px}
+.lang .btn.on{background:var(--gold);color:#2b2240}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn.nope{background:var(--coral);color:#fff;opacity:.5;pointer-events:none}
+.btn.yes{background:var(--mint);color:#fff}
+
+.card{background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:14px;box-shadow:0 4px 0 var(--shadow)}
+
+/* title */
+#scr-title{overflow-y:auto;padding-bottom:12px}
+.logo{
+  margin:18px 0 0;text-align:center;font-weight:700;font-size:54px;line-height:.95;letter-spacing:1px;
+  color:var(--gold);text-shadow:0 3px 0 var(--gold-deep),0 6px 0 var(--plum),3px 6px 0 var(--plum),-3px 6px 0 var(--plum);
+}
+.tag{text-align:center;margin:4px 0 6px;color:var(--ink-soft);font-size:17px}
+.hero-list{display:flex;flex-direction:column;gap:10px}
+.hero-row{display:flex;gap:8px;align-items:stretch}
+.hero-row .play{flex:1;display:flex;align-items:center;gap:12px;text-align:left}
+.hero-row .play img{width:40px;height:40px}
+.hero-row .play small{display:block;font-weight:400;color:var(--ink-soft);font-size:14px}
+.hero-row .del{width:56px;font-size:14px;padding:4px}
+.hero-row .del.armed{background:var(--coral);color:#fff}
+label,.label{display:block;font-weight:600;margin:0 0 6px}
+input[type=text]{
+  font:inherit;font-size:20px;width:100%;padding:10px;border:3px solid var(--edge);border-radius:8px;
+  background:var(--bg);color:var(--ink);margin-bottom:12px;-webkit-user-select:text;user-select:text;
+}
+.seg{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+.seg .btn{text-align:left;font-size:16px}
+.seg .btn small{display:block;font-weight:400;font-size:13px;color:inherit;opacity:.8}
+.seg .btn.on{background:var(--gold);color:#2b2240}
+.row{display:flex;gap:8px}.row>*{flex:1}
+
+/* lobby */
+#scr-lobby{overflow-y:auto;padding-bottom:12px}
+.lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px}
+#lobbyHero{width:96px;height:96px;background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px}
+.lobby-top h2{margin:0;font-size:30px}
+.lvl-bar{height:12px;border:3px solid var(--edge);border-radius:6px;background:var(--bg);overflow:hidden;margin-top:6px;width:160px}
+.lvl-bar i{display:block;height:100%;background:var(--mint)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats b{display:block;font-size:24px}
+.stats span{font-size:13px;color:var(--ink-soft)}
+.wardrobe{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.skin{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;padding:8px 4px;min-height:84px}
+.skin img{width:44px;height:44px}
+.skin.on{background:var(--gold);color:#2b2240}
+.skin.locked{opacity:.55}
+.wallet{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:17px}
+.wallet img{width:20px;height:20px}.wallet b{font-size:20px}
+#lobbyPet{width:52px;height:52px;align-self:flex-end;margin-left:-22px;background:none;border:0;padding:0}
+.skin .price{display:flex;align-items:center;gap:3px;font-family:var(--read);font-weight:600}
+.skin .price img{width:14px;height:14px}
+.skin.buy{opacity:.85}
+.skin .none{width:44px;height:44px;display:grid;place-items:center;font-size:26px;color:var(--ink-soft)}
+.boosts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.boosts .btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:16px}
+.boosts .btn img{width:22px;height:22px}
+.boosts .btn small{font-size:13px}
+.boosts .btn.on{background:var(--mint);color:#fff}
+.info img.big{width:96px;height:96px;margin:0 auto}
+.info .req{font-size:18px}
+.info .prog{height:12px;border:3px solid var(--edge);border-radius:6px;overflow:hidden;background:var(--bg)}
+.info .prog i{display:block;height:100%;background:var(--gold)}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper b{font-size:22px;min-width:2ch;text-align:center}
+.stepper .btn{width:48px}
+h3{margin:0 0 8px;font-size:18px}
+
+/* game */
+.hud span{white-space:nowrap}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:15px;font-weight:600;min-height:40px}
+.hud .grp{display:flex;align-items:center;gap:10px}
+.hud .it{display:flex;align-items:center;gap:3px}
+.hud img{width:18px;height:18px}
+.hud .hearts{display:flex;gap:2px}
+.hud .menu{min-height:36px;padding:2px 10px;font-size:16px}
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.cw{position:relative;border:3px solid var(--edge);border-radius:6px;box-shadow:0 4px 0 var(--shadow);overflow:hidden;background:#1d1630}
+.cw canvas{width:100%;height:100%;display:block;touch-action:manipulation}
+#toasts{position:absolute;left:0;right:0;top:8px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.toast{
+  background:var(--card);color:var(--ink);border:3px solid var(--edge);border-radius:8px;padding:5px 10px;font-weight:600;font-size:15px;
+  animation:pop 1.9s ease forwards;box-shadow:0 3px 0 var(--shadow);display:flex;gap:6px;align-items:center;max-width:92%;
+}
+.toast img{width:16px;height:16px}
+@keyframes pop{0%{transform:scale(.6);opacity:0}10%{transform:scale(1.06);opacity:1}18%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
+@media (prefers-reduced-motion: reduce){.toast{animation:fade 1.9s linear forwards}@keyframes fade{0%,80%{opacity:1}100%{opacity:0}}}
+
+.panel{display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
+.msgrow{display:flex;align-items:center;gap:8px;min-height:40px}
+.msg{flex:1;margin:0;font-size:17px;line-height:1.2}
+.qbox{background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px 10px 8px;text-align:center;box-shadow:0 4px 0 var(--shadow)}
+.qtext{font-size:42px;font-weight:600;line-height:1.15;white-space:nowrap}
+.qtext.long{font-size:32px}
+.qtext .slot{display:inline-block;min-width:1.2ch;color:var(--sky);border-bottom:4px solid currentColor;line-height:1}
+.qtext.reveal .slot{color:var(--mint)}
+.qtext.good .slot{color:var(--mint)}
+.pips{display:flex;justify-content:center;gap:6px;margin-bottom:2px}
+.pips i{width:14px;height:14px;border:3px solid var(--edge);border-radius:3px;background:transparent}
+.pips i.on{background:var(--coral)}
+.timer{height:10px;border:3px solid var(--edge);border-radius:6px;overflow:hidden;margin-top:4px;background:var(--bg)}
+.timer i{display:block;height:100%;width:100%;background:var(--gold)}
+.timer.low i{background:var(--coral)}
+.answers{display:grid;gap:8px}
+.answers.choices{grid-template-columns:1fr 1fr}
+.answers.choices .btn{font-size:34px;font-weight:600;min-height:64px}
+.answers.choices.n3 .btn:last-child{grid-column:1 / -1}
+.answers.keypad{grid-template-columns:repeat(3,1fr)}
+.answers.keypad .btn{font-size:28px;font-weight:500;min-height:46px;padding:4px}
+.answers.doors{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
+.answers.doors .btn{font-size:18px;min-height:60px}
+.answers.off{pointer-events:none}
+.coach{display:flex;gap:10px;align-items:flex-start}
+.coach img{width:44px;height:44px;flex:none}
+.coach p{margin:0;font-size:18px;line-height:1.3}
+.coach b{display:block;font-size:14px;color:var(--ink-soft)}
+
+/* stats */
+#scr-stats{overflow-y:auto;padding-bottom:12px}
+.stats-head{display:flex;align-items:center;gap:10px;margin-top:6px}
+.stats-head h2{margin:0;font-size:26px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum b{display:block;font-size:26px;font-weight:600}
+.sum span{font-size:14px;color:var(--ink-soft)}
+.op{padding:8px 0;border-top:2px dashed color-mix(in srgb,var(--ink) 20%,transparent)}
+.op:first-of-type{border-top:0}
+.op-top{display:flex;align-items:center;gap:8px;font-size:17px}
+.op-top span:first-child{flex:1}
+.op-top b{font-size:18px}
+.flag{font-size:12px;background:var(--coral);color:#fff;border-radius:5px;padding:2px 6px}
+.bar{height:10px;border:2px solid var(--edge);border-radius:5px;overflow:hidden;background:var(--bg);margin:5px 0 3px}
+.bar i{display:block;height:100%;background:var(--mint)}
+.bar.mid i{background:var(--gold)}.bar.lowv i{background:var(--coral)}
+.op small,.muted{font-size:14px;color:var(--ink-soft)}
+.miss{display:flex;justify-content:space-between;font-size:20px;padding:4px 0}
+.miss small{font-size:14px;color:var(--ink-soft);align-self:center}
+.runl{display:flex;justify-content:space-between;font-size:16px;padding:3px 0}
+.modal{position:fixed;inset:0;background:rgba(29,22,48,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal .card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.modal h2{margin:0;font-size:28px}
+.modal p{margin:0;font-size:17px}
+.shake{animation:shk .3s}
+@keyframes shk{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Hero select -->
+  <section id="scr-title" class="screen">
+    <h1 class="logo">Digit<br>Dungeon</h1>
+    <p class="tag" data-i18n="tag"></p>
+    <div class="lang" id="langSeg">
+      <button class="btn" data-lang="en">English</button>
+      <button class="btn" data-lang="fr">Français</button>
+    </div>
+    <div id="heroList" class="hero-list"></div>
+    <button id="btnNew" class="btn gold" data-i18n="newHero"></button>
+    <div id="newForm" class="card" hidden>
+      <label for="nameIn" data-i18n="heroName"></label>
+      <input id="nameIn" type="text" maxlength="12" autocomplete="off" placeholder="Lou">
+      <p class="label" data-i18n="whereStart"></p>
+      <div class="seg" id="startSeg">
+        <button class="btn on" data-r="1"><span data-i18n="s1"></span><small data-i18n="s1d"></small></button>
+        <button class="btn" data-r="4"><span data-i18n="s2"></span><small data-i18n="s2d"></small></button>
+        <button class="btn" data-r="7"><span data-i18n="s3"></span><small data-i18n="s3d"></small></button>
+      </div>
+      <div class="row">
+        <button id="btnCancel" class="btn" data-i18n="cancel"></button>
+        <button id="btnCreate" class="btn primary" data-i18n="create"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hero lobby -->
+  <section id="scr-lobby" class="screen" hidden>
+    <div class="lobby-top">
+      <img id="lobbyHero" class="px" alt="">
+      <img id="lobbyPet" class="px" alt="" hidden>
+      <div>
+        <h2 id="lobbyName"></h2>
+        <div id="lobbyLvl"></div>
+        <div class="lvl-bar"><i id="lobbyBar"></i></div>
+        <div class="wallet"><img id="walletIco" class="px" alt=""><b id="wallet">0</b><span data-i18n="walletLbl"></span></div>
+      </div>
+    </div>
+    <button id="btnPlay" class="btn primary" style="font-size:22px;min-height:60px" data-i18n="enter"></button>
+    <div class="card stats">
+      <div><b id="stRoom">0</b><span data-i18n="bestRoom"></span></div>
+      <div><b id="stStreak">0</b><span data-i18n="bestStreak"></span></div>
+      <div><b id="stGold">0</b><span data-i18n="goldFound"></span></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="wardrobe"></h3>
+      <div id="wardrobe" class="wardrobe"></div>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="wardNote"></p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="pets"></h3>
+      <div id="petShop" class="wardrobe"></div>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="petNote"></p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="boosts"></h3>
+      <div id="boosts" class="boosts"></div>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="boostNote"></p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="lvTitle"></h3>
+      <div class="stepper">
+        <button id="lvDown" class="btn" aria-label="Easier">−</button>
+        <b id="lvVal" style="font-family:var(--read)">1</b>
+        <button id="lvUp" class="btn" aria-label="Harder">+</button>
+        <span id="lvDesc" style="font-size:14px;color:var(--ink-soft);flex:1"></span>
+      </div>
+    </div>
+    <button id="btnStats" class="btn" data-i18n="statsBtn"></button>
+    <button id="btnSwitch" class="btn ghost" data-i18n="switchHero"></button>
+  </section>
+
+  <!-- Stats -->
+  <section id="scr-stats" class="screen" hidden>
+    <div class="stats-head"><button id="btnStatsBack" class="btn small" data-i18n="back"></button><h2 id="statsTitle"></h2></div>
+    <div id="statsBody" style="display:flex;flex-direction:column;gap:10px"></div>
+  </section>
+
+  <!-- Game -->
+  <section id="scr-game" class="screen" hidden>
+    <div class="hud">
+      <div class="grp">
+        <div class="hearts" id="hudHearts"></div>
+        <div class="it"><img class="px" id="icoPotion" alt="Potions"><span id="hudPotion">0</span></div>
+        <div class="it"><img class="px" id="icoCoin" alt="Gold"><span id="hudGold">0</span></div>
+      </div>
+      <div class="grp">
+        <div class="it"><img class="px" id="icoFlame" alt="Streak"><span id="hudStreak">0</span></div>
+        <span id="hudRoom"></span>
+        <button class="btn menu" id="btnMenu" aria-label="Pause">II</button>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="cw" id="cw">
+        <canvas id="cv" width="128" height="128"></canvas>
+        <div id="toasts" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="msgrow"><p id="msg" class="msg"></p><span id="msgAside"></span></div>
+      <div id="qbox" class="qbox" hidden>
+        <div id="pips" class="pips"></div>
+        <div id="qtext" class="qtext"></div>
+        <div id="timer" class="timer"><i id="timerFill"></i></div>
+      </div>
+      <div id="answers" class="answers"></div>
+    </div>
+  </section>
+</div>
+
+<div id="modal" class="modal" hidden><div class="card" id="modalCard"></div></div>
+
+<script>
+"use strict";
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+const now = () => performance.now();
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function btn(label, cls, fn) { const b = el('button', 'btn ' + (cls || ''), label); b.addEventListener('click', fn); return b; }
+function mulberry(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ================= language ================= */
+const I18N = {
+  en: {
+    tag: 'Solve sums. Open doors. Find treasure.', newHero: 'New hero', heroName: 'Hero name', nameNeeded: 'Type a name first',
+    whereStart: 'Where should the puzzles start?',
+    s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Bigger sums and easy times tables, ages 7–8',
+    s3: 'Math whiz', s3d: 'Times tables and dividing, ages 9+', cancel: 'Cancel', create: 'Create hero',
+    del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
+    enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', goldFound: 'Gold found',
+    wardrobe: 'Wardrobe', wardNote: 'Buy outfits with gold. Special ones are won with achievements: tap one to see how.', locked: 'Locked',
+    walletLbl: 'gold to spend', pets: 'Pets', petNote: 'A pet follows you in the dungeon. Some are bought, some are won: tap one to see how.', noPet: 'No pet',
+    petNames: ['Chick', 'Cat', 'Puppy', 'Bunny', 'Frog', 'Ghost', 'Baby dragon', 'Owlet', 'Turtle', 'Fox', 'Penguin', 'Blue slime', 'Unicorn'],
+    boosts: 'Boosts for the next run', boostNote: 'Bought boosts are used when you enter the dungeon. Tap again to get your gold back.',
+    boostHeart: '+1 heart', boostPotion: '+1 potion', boostOn: 'Ready! Tap to undo', potionMax: n => `Max ${n} potion at this level`,
+    buy: p => `Buy for ${p} gold`, needMore: n => `You need ${n} more gold.`, special: 'Special', close: 'Close',
+    req: (k, n, o) => ({ streak: `Get ${n} right answers in a row.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
+    progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
+    lvTitle: 'Puzzle level (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
+    level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`,
+    lvDesc: ['Adding up to 10, two choices', 'Adding and taking away to 10', 'Up to 20, missing numbers', 'Up to 50, ×2 ×5 ×10, with a timer', 'All times tables, with a timer', 'Type the answer, up to 100', 'Dividing and missing factors', 'Big numbers, 2-digit times', 'Times before plus, brackets', 'Champion mix'],
+    skins: ['Knight', 'Ranger', 'Wizard', 'Pirate', 'Dwarf', 'Star hero', 'Ninja', 'Royal', 'Robot', 'Viking', 'Astronaut', 'Fairy', 'Ice mage', 'Champion'],
+    mon: { slime: 'A wobbly slime', bat: 'A sleepy bat', goblin: 'A grumpy goblin' },
+    monIntro: n => `${n} blocks the way! Solve it to zap it.`,
+    bossIntro: n => `Ember the dragon guards this room! Get ${n} right in a row.`,
+    goldChest: n => `A golden chest! Get ${n} right in a row to open it.`, chest: 'A treasure chest! Solve the lock to open it.',
+    owlMeet: 'You meet a friendly owl.', hootSays: 'Professor Hoot says', thanks: 'Thanks, Professor!',
+    doorsLocked: 'The doors are locked. Tap one to try its lock.', doorsOpen: 'Which way now? Tap a door.',
+    doors: { left: 'Left', top: 'Middle', right: 'Right' }, lockAsks: 'This lock asks:', otherDoor: 'Other door', leaveIt: 'Leave it',
+    fast: 'Super fast! +1 free-try potion', streakSkin: (n, k) => `${n} in a row! New outfit: ${k}`, streak: n => `${n} in a row!`,
+    levelUp: n => `Level ${n}! Trickier puzzles ahead`, levelDown: n => `Level ${n}: let’s practise a bit`,
+    praise: ['Correct!', 'Nice one!', 'You got it!', 'Brilliant!'],
+    dragonBeaten: g => `Dragon beaten! +${g} gold, +1 heart`, gold: g => `+${g} gold`, emberGone: 'Ember flies away, defeated!', poof: 'Poof! It’s gone.',
+    hitMore: n => `Hit! ${n} more in a row.`, heart: '+1 heart', potion: '+1 free-try potion', chestOpen: 'The chest pops open!',
+    clickMore: n => `Click! ${n} more in a row.`, potionUsed: 'Potion used: one more try!', freeTry: 'Not quite. That one’s free, try again!',
+    potionTime: 'Time’s up! Your potion gives you more time.', tryAgain: 'Not quite. Try again!',
+    answerWas: (a, to) => (to ? 'Time’s up! ' : 'Oops! ') + `The answer was ${a}.`,
+    napTitle: 'Your hero needs a nap!', napBody: (r, s, g, k) => `You explored ${r} rooms and solved ${s} puzzles. You keep half your bag: ${k} of ${g} gold.`,
+    floorCleared: n => `Floor ${n} cleared!`, bag: g => `You have ${g} gold in your bag.`,
+    stopOrMore: 'Go home to keep it all, or go deeper. Harder puzzles give more gold. If you run out of hearts you lose half your bag.',
+    goHome: g => `Go home with ${g} gold`, goSame: n => `Go deeper, same puzzles (level ${n})`, goHarder: n => `Go deeper, harder puzzles (level ${n}, more gold)`,
+    floorSame: n => `Floor ${n}: same puzzles!`, floorStart: n => `Floor ${n}: harder puzzles, more gold!`,
+    homeTitle: 'Welcome home!', homeBody: (r, g) => `You explored ${r} rooms and brought back ${g} gold.`, ok: 'OK',
+    playAgain: 'Play again', backHero: 'Back to my hero', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'), leave: g => `Leave now, keep half (${g} gold)`,
+    statsTitle: n => `${n}’s stats`, answered: 'Puzzles answered', firstTry: 'Right first time', runs: 'Runs played', topLevel: 'Highest level',
+    byOp: 'By type of puzzle', ops: { add: 'Adding', sub: 'Taking away', mul: 'Times', div: 'Dividing', miss: 'Missing number', mix: 'Mixed' },
+    opLine: (n, avg) => `${n} puzzles` + (avg ? `, ${avg} s on average when right` : ''), practise: 'Needs practice',
+    tricky: 'Trickiest puzzles', missed: n => `missed ${n}×`, recent: 'Recent runs', runLine: (r, p) => `${r} rooms, ${p}% right`,
+    noStats: 'Play a run to see stats here.', noMissed: 'No missed puzzles yet.', resetStats: 'Reset stats', confirm: 'Tap again to confirm',
+    tips: {
+      low: ['Count on from the bigger number. For 2 + 7, start at 7 and count 8, 9.', 'Make a 10! 8 + 5 is 8 + 2 + 3, so 10 + 3 = 13.', 'Doubles help: 6 + 6 = 12, so 6 + 7 is one more, 13.', 'For 3 + ? = 8, count up from 3 to 8 on your fingers. That’s 5.', 'Taking away? Count back: 9 − 3 goes 8, 7, 6.'],
+      mid: ['Times 10? Just add a zero: 7 × 10 = 70.', 'Times 5 is half of times 10: 5 × 8 = 80 ÷ 2 = 40.', 'The 9 trick: 9 × 7 = 70 − 7 = 63.', 'Times 2 means double it: 2 × 8 = 8 + 8 = 16.', 'Adding 9? Add 10, then take 1 away: 34 + 9 = 44 − 1 = 43.', 'Order doesn’t matter for times: 3 × 8 is the same as 8 × 3.'],
+      high: ['Dividing is times backwards. For 42 ÷ 6, ask ? × 6 = 42.', 'Times before plus: 2 + 3 × 4 = 2 + 12 = 14.', 'Brackets go first: (2 + 3) × 4 = 5 × 4 = 20.', 'Split big numbers: 23 × 4 = 20 × 4 + 3 × 4 = 80 + 12 = 92.', 'Round, then fix: 49 + 37 = 50 + 37 − 1 = 86.', 'Check with the opposite: if 56 ÷ 7 = 8, then 8 × 7 is 56.'],
+    },
+  },
+  fr: {
+    tag: 'Résous les calculs, ouvre les portes, trouve des trésors.', newHero: 'Nouveau personnage', heroName: 'Prénom', nameNeeded: 'Écris d’abord un prénom',
+    whereStart: 'Par où commencer ?',
+    s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Plus grands nombres et tables faciles, 7–8 ans',
+    s3: 'As du calcul', s3d: 'Tables et divisions, 9 ans et plus', cancel: 'Annuler', create: 'Créer',
+    del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
+    enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', goldFound: 'Or trouvé',
+    wardrobe: 'Garde-robe', wardNote: 'Achète des tenues avec ton or. Les tenues spéciales se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
+    walletLbl: 'or à dépenser', pets: 'Compagnons', petNote: 'Un compagnon te suit dans le donjon. Certains s’achètent, d’autres se gagnent : touche-en un pour savoir comment.', noPet: 'Aucun',
+    petNames: ['Poussin', 'Chaton', 'Chiot', 'Lapin', 'Grenouille', 'Fantôme', 'Bébé dragon', 'Chouette', 'Tortue', 'Renarde', 'Pingouin', 'Gelée bleue', 'Licorne'],
+    boosts: 'Bonus pour la prochaine partie', boostNote: 'Les bonus achetés s’activent à l’entrée du donjon. Touche encore pour récupérer ton or.',
+    boostHeart: '+1 cœur', boostPotion: '+1 potion', boostOn: 'Prêt ! Touche pour annuler', potionMax: n => `Max ${n} potion à ce niveau`,
+    buy: p => `Acheter pour ${p} or`, needMore: n => `Il te manque ${n} or.`, special: 'Spécial', close: 'Fermer',
+    req: (k, n, o) => ({ streak: `Réussis ${n} calculs d’affilée.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
+    progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
+    lvTitle: 'Niveau des calculs (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
+    level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`,
+    lvDesc: ['Additions jusqu’à 10, deux choix', 'Additions et soustractions jusqu’à 10', 'Jusqu’à 20, nombres manquants', 'Jusqu’à 50, ×2 ×5 ×10, avec chrono', 'Toutes les tables, avec chrono', 'Réponse à taper, jusqu’à 100', 'Divisions et facteurs manquants', 'Grands nombres, fois à 2 chiffres', 'Fois avant plus, parenthèses', 'Grand mélange'],
+    skins: ['Chevalière', 'Archère', 'Magicienne', 'Pirate', 'Naine', 'Étoile', 'Ninja', 'Reine', 'Robot', 'Viking', 'Astronaute', 'Fée', 'Mage des glaces', 'Championne'],
+    mon: { slime: 'Une gelée toute molle', bat: 'Une chauve-souris endormie', goblin: 'Un gobelin grognon' },
+    monIntro: n => `${n} bloque le passage ! Résous le calcul pour passer.`,
+    bossIntro: n => `Braise la dragonne garde cette salle ! Trouve ${n} bonnes réponses d’affilée.`,
+    goldChest: n => `Un coffre en or ! Trouve ${n} bonnes réponses d’affilée pour l’ouvrir.`, chest: 'Un coffre au trésor ! Résous le cadenas pour l’ouvrir.',
+    owlMeet: 'Tu rencontres une chouette sympa.', hootSays: 'Professeure Chouette dit', thanks: 'Merci, Professeure !',
+    doorsLocked: 'Les portes sont fermées. Touche une porte pour essayer son cadenas.', doorsOpen: 'Par où aller ? Touche une porte.',
+    doors: { left: 'Gauche', top: 'Milieu', right: 'Droite' }, lockAsks: 'Ce cadenas demande :', otherDoor: 'Autre porte', leaveIt: 'Laisser',
+    fast: 'Super rapide ! +1 potion d’essai gratuit', streakSkin: (n, k) => `${n} d’affilée ! Nouvelle tenue : ${k}`, streak: n => `${n} d’affilée !`,
+    levelUp: n => `Niveau ${n} ! Des calculs plus corsés`, levelDown: n => `Niveau ${n} : on s’entraîne un peu`,
+    praise: ['Exact !', 'Bien joué !', 'Trouvé !', 'Génial !'],
+    dragonBeaten: g => `Dragonne vaincue ! +${g} or, +1 cœur`, gold: g => `+${g} or`, emberGone: 'Braise s’envole, vaincue !', poof: 'Pouf ! Disparu.',
+    hitMore: n => `Touché ! Encore ${n} d’affilée.`, heart: '+1 cœur', potion: '+1 potion d’essai gratuit', chestOpen: 'Le coffre s’ouvre !',
+    clickMore: n => `Clic ! Encore ${n} d’affilée.`, potionUsed: 'Potion utilisée : encore un essai !', freeTry: 'Pas tout à fait. Celle-ci est gratuite, réessaie !',
+    potionTime: 'Temps écoulé ! Ta potion te donne plus de temps.', tryAgain: 'Pas tout à fait. Réessaie !',
+    answerWas: (a, to) => (to ? 'Temps écoulé ! ' : 'Oups ! ') + `La réponse était ${a}.`,
+    napTitle: 'C’est l’heure de la sieste !', napBody: (r, s, g, k) => `Tu as exploré ${r} salles et résolu ${s} calculs. Tu gardes la moitié de ton sac : ${k} or sur ${g}.`,
+    floorCleared: n => `Étage ${n} terminé !`, bag: g => `Tu as ${g} or dans ton sac.`,
+    stopOrMore: 'Rentre pour tout garder, ou descends. Des calculs plus durs rapportent plus d’or. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
+    goHome: g => `Rentrer avec ${g} or`, goSame: n => `Descendre, mêmes calculs (niveau ${n})`, goHarder: n => `Descendre, calculs plus durs (niveau ${n}, plus d’or)`,
+    floorSame: n => `Étage ${n} : mêmes calculs !`, floorStart: n => `Étage ${n} : calculs plus durs, plus d’or !`,
+    homeTitle: 'Bienvenue à la maison !', homeBody: (r, g) => `Tu as exploré ${r} salles et rapporté ${g} or.`, ok: 'OK',
+    playAgain: 'Rejouer', backHero: 'Retour à mon personnage', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'), leave: g => `Partir maintenant, garder la moitié (${g} or)`,
+    statsTitle: n => `Stats de ${n}`, answered: 'Calculs faits', firstTry: 'Justes du premier coup', runs: 'Parties jouées', topLevel: 'Niveau max',
+    byOp: 'Par type de calcul', ops: { add: 'Additions', sub: 'Soustractions', mul: 'Multiplications', div: 'Divisions', miss: 'Nombre manquant', mix: 'Calculs mélangés' },
+    opLine: (n, avg) => `${n} calculs` + (avg ? `, ${avg} s en moyenne quand c’est juste` : ''), practise: 'À travailler',
+    tricky: 'Calculs les plus difficiles', missed: n => `raté ${n} fois`, recent: 'Dernières parties', runLine: (r, p) => `${r} salles, ${p} % justes`,
+    noStats: 'Joue une partie pour voir les stats ici.', noMissed: 'Aucun calcul raté pour l’instant.', resetStats: 'Effacer les stats', confirm: 'Touche encore pour confirmer',
+    tips: {
+      low: ['Compte à partir du plus grand nombre : pour 2 + 7, pars de 7 et compte 8, 9.', 'Fais 10 ! 8 + 5, c’est 8 + 2 + 3, donc 10 + 3 = 13.', 'Les doubles aident : 6 + 6 = 12, donc 6 + 7, c’est un de plus : 13.', 'Pour 3 + ? = 8, compte de 3 jusqu’à 8 sur tes doigts. Ça fait 5.', 'Pour enlever, compte à rebours : 9 − 3, c’est 8, 7, 6.'],
+      mid: ['Fois 10 ? Ajoute juste un zéro : 7 × 10 = 70.', 'Fois 5, c’est la moitié de fois 10 : 5 × 8 = 80 ÷ 2 = 40.', 'L’astuce du 9 : 9 × 7 = 70 − 7 = 63.', 'Fois 2, c’est le double : 2 × 8 = 8 + 8 = 16.', 'Ajouter 9 ? Ajoute 10, puis enlève 1 : 34 + 9 = 44 − 1 = 43.', 'L’ordre ne compte pas pour les fois : 3 × 8, c’est pareil que 8 × 3.'],
+      high: ['Diviser, c’est multiplier à l’envers. Pour 42 ÷ 6, cherche ? × 6 = 42.', 'Les fois avant les plus : 2 + 3 × 4 = 2 + 12 = 14.', 'Les parenthèses d’abord : (2 + 3) × 4 = 5 × 4 = 20.', 'Découpe les grands nombres : 23 × 4 = 20 × 4 + 3 × 4 = 80 + 12 = 92.', 'Arrondis, puis corrige : 49 + 37 = 50 + 37 − 1 = 86.', 'Vérifie avec l’opération inverse : si 56 ÷ 7 = 8, alors 8 × 7 = 56.'],
+    },
+  },
+};
+const frSpace = v => typeof v === 'string' ? v.replace(/ ([!?:;%])/g, '\u202f$1') : v;
+function t(k, ...a) {
+  const d = I18N[store.lang] || I18N.en;
+  let v = d[k] !== undefined ? d[k] : I18N.en[k];
+  if (typeof v === 'function') v = v(...a);
+  return store.lang === 'fr' ? (Array.isArray(v) ? v.map(frSpace) : frSpace(v)) : v;
+}
+const tt = (k, sub) => store.lang === 'fr' ? frSpace(I18N.fr[k][sub]) : I18N.en[k][sub];
+function applyLang() {
+  document.documentElement.lang = store.lang;
+  document.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
+  $('#nameIn').placeholder = 'Lou';
+  $('#lvDown').setAttribute('aria-label', t('easier')); $('#lvUp').setAttribute('aria-label', t('harder'));
+  document.querySelectorAll('#langSeg .btn').forEach(b => b.classList.toggle('on', b.dataset.lang === store.lang));
+}
+
+/* ================= sprites ================= */
+const SPR = {
+  hero: [
+    "....HHHH....",
+    "...HHHHHH...",
+    "...HSSSSH...",
+    "...SESSES...",
+    "...SSSSSS...",
+    "....SSSS....",
+    "..BBBBBBBB..",
+    ".SBBBBBBBBS.",
+    ".S.BBYYBB.S.",
+    "...BBBBBB...",
+    "...LL..LL...",
+    "...KK..KK..."],
+  slime: [
+    "............",
+    "............",
+    "....GGGG....",
+    "...GGGGGG...",
+    "..GGWGGWGG..",
+    "..GGEGGEGG..",
+    ".GGGGGGGGGG.",
+    ".GGGGPPGGGG.",
+    "GGGGGGGGGGGG",
+    "GDGGGGGGGGDG",
+    ".DDDDDDDDDD.",
+    "............"],
+  bat: [
+    "............",
+    "............",
+    "P..........P",
+    "PP..PPPP..PP",
+    "PPPPPPPPPPPP",
+    ".PPPWPPWPPP.",
+    "..PPEPPEPP..",
+    "...PPPPPP...",
+    "....PFFP....",
+    ".....PP.....",
+    "............",
+    "............"],
+  goblin: [
+    "............",
+    ".G........G.",
+    ".GG.GGGG.GG.",
+    "..GGGGGGGG..",
+    "...GWGGWG...",
+    "...GEGGEG...",
+    "....GTTG....",
+    "...RRRRRR...",
+    "..GRRRRRRG..",
+    "...RRRRRR...",
+    "...GG..GG...",
+    "............"],
+  dragon: [
+    "................",
+    "..Y..........Y..",
+    "..YY.DDDDDD.YY..",
+    "...DDDDDDDDDD...",
+    "..DDWWDDDDWWDD..",
+    "..DDWEDDDDEWDD..",
+    "..DDDDDDDDDDDD..",
+    "..DDDNDDDDNDDD..",
+    "...DDDDDDDDDD...",
+    "....DFDFDFDD....",
+    ".AA.DDDDDDDD.AA.",
+    "AAADDBBBBBBDDAAA",
+    ".AADDBBBBBBDDAA.",
+    "...DDBBBBBBDD...",
+    "...DD.DDDD.DD...",
+    "..DDD......DDD.."],
+  chest: [
+    "............",
+    "............",
+    "..OOOOOOOO..",
+    ".OWWWWWWWWO.",
+    ".OWBBBBBBWO.",
+    ".OOOOYYOOOO.",
+    ".OWWWYYWWWO.",
+    ".OWBBBBBBWO.",
+    ".OWBBBBBBWO.",
+    ".OWWWWWWWWO.",
+    ".OOOOOOOOOO.",
+    "............"],
+  chestOpen: [
+    ".OOOOOOOOOO.",
+    ".OWWWWWWWWO.",
+    ".OOOOOOOOOO.",
+    "..YCYYCYYC..",
+    ".OYYCYYCYYO.",
+    ".OOOOOOOOOO.",
+    ".OWWWWWWWWO.",
+    ".OWBBBBBBWO.",
+    ".OWBBBBBBWO.",
+    ".OWWWWWWWWO.",
+    ".OOOOOOOOOO.",
+    "............"],
+  owl: [
+    "...KKKKKK...",
+    ".KKKKKKKKKK.",
+    "..B......B..",
+    "..BBBBBBBB..",
+    ".BWWBBBBWWB.",
+    ".BWEWBBWEWB.",
+    ".BWWBYYBWWB.",
+    ".BBBBYYBBBB.",
+    ".BCCCCCCCCB.",
+    "..BCCCCCCB..",
+    "...YY..YY...",
+    "............"],
+  heart: [".RR.RR.", "RRRRRRR", "RRRRRRR", ".RRRRR.", "..RRR..", "...R..."],
+  potion: ["..WWW..", "...C...", "..CCC..", ".CPPPC.", "CPPPPPC", "CPPWPPC", ".CPPPC.", "..CCC.."],
+  coin: [".YYYY.", "YYOYYY", "YYOYYY", "YYOYYY", "YYOYYY", ".YYYY."],
+  flame: ["..R..", ".RR..", ".RYR.", "RYYR.", "RYWYR", "RYYYR", ".RRR."],
+};
+const PAL = {
+  slime: { G: '#5fd38d', D: '#2f9e63', W: '#ffffff', E: '#2b2240', P: '#ff8fb1' },
+  bat: { P: '#a57cf5', W: '#ffffff', E: '#2b2240', F: '#ffffff' },
+  goblin: { G: '#8fcf4a', W: '#ffffff', E: '#2b2240', T: '#ffffff', R: '#e0603a' },
+  dragon: { D: '#ff7a45', Y: '#ffe08a', W: '#ffffff', E: '#2b2240', N: '#b5442a', F: '#ffffff', A: '#ffb347', B: '#ffe08a' },
+  chest: { O: '#3b2a1a', W: '#c98a4a', B: '#9a5f2c', Y: '#ffc83d', C: '#fff3a6' },
+  goldChest: { O: '#3b2a1a', W: '#ffd84d', B: '#e0a800', Y: '#ffffff', C: '#fff3a6' },
+  owl: { K: '#2b2240', B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' },
+  heart: { R: '#ff4f6d' }, heartEmpty: { R: '#6a5a86' },
+  potion: { W: '#f4ead2', C: '#2b2240', P: '#ff6bd6' },
+  coin: { Y: '#ffc83d', O: '#e09a12' },
+  flame: { R: '#ff7a2f', Y: '#ffc83d', W: '#fff6c8' },
+};
+const SKINS = [
+  { H: '#c9d2e3', B: '#4f8cf0', L: '#2c4f9e', cost: 0 },
+  { H: '#3f9e4f', B: '#7bd66a', L: '#6b4a2a', cost: 60 },
+  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', cost: 150 },
+  { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', cost: 250 },
+  { H: '#e8892b', B: '#b5562b', L: '#5a3a22', req: ['streak', 10] },
+  { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 30] },
+  { H: '#2b2240', B: '#46466e', L: '#2b2240', cost: 400 },
+  { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['room', 20] },
+  { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['level', 6] },
+  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', cost: 600 },
+  { H: '#ffffff', B: '#dfe7f2', L: '#8a97a8', req: ['op', 100, 'mul'] },
+  { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', cost: 900 },
+  { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['op', 50, 'div'] },
+  { H: '#ffd23f', B: '#ff4f6d', L: '#ffd23f', req: ['floor', 5] },
+];
+const PETS = [
+  { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, cost: 50 },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'OOPPOO.O', '.OOOO..O', '.OOOOOOO', '.O.O.O..'], pal: { O: '#ff9f43', E: '#2b2240', P: '#ff8fb1' }, cost: 100 },
+  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, cost: 100 },
+  { spr: ['.W..W...', '.WP.WP..', '.W..W...', 'WWWWWW..', 'WEWWEW..', 'WWPPWW..', '.WWWW.W.', '.W..W...'], pal: { W: '#f4f0ff', P: '#ff8fb1', E: '#2b2240' }, cost: 200 },
+  { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['solved', 150] },
+  { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['room', 15] },
+  { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['dragons', 5] },
+  { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15] },
+  { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, cost: 300 },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, cost: 500 },
+  { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 100, 'sub'] },
+  { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['op', 60, 'miss'] },
+  { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['level', 8] },
+];
+const BOOSTS = { heart: 20, potion: 12 };
+const heroPal = i => { const s = SKINS[i] || SKINS[0]; return { H: s.H, B: s.B, L: s.L, S: '#ffd2a6', E: '#2b2240', Y: '#ffc83d', K: '#4a3020' }; };
+const MONSTERS = {
+  slime: { name: 'A wobbly slime', pal: PAL.slime, col: '#5fd38d' },
+  bat: { name: 'A sleepy bat', pal: PAL.bat, col: '#a57cf5' },
+  goblin: { name: 'A grumpy goblin', pal: PAL.goblin, col: '#8fcf4a' },
+};
+
+function drawSprite(c, spr, pal, cx, cy, s, tint) {
+  const h = spr.length, w = spr[0].length;
+  const ox = Math.round(cx - w * s / 2), oy = Math.round(cy - h * s / 2);
+  for (let j = 0; j < h; j++) {
+    const row = spr[j];
+    for (let i = 0; i < w; i++) {
+      const ch = row[i];
+      if (ch === '.') continue;
+      c.fillStyle = tint || pal[ch] || '#f0f';
+      c.fillRect(ox + i * s, oy + j * s, s, s);
+    }
+  }
+}
+function drawOutlined(c, spr, pal, cx, cy, s, tint, ow) {
+  ow = ow || 1;
+  for (const [dx, dy] of [[-ow, 0], [ow, 0], [0, -ow], [0, ow]]) drawSprite(c, spr, pal, cx + dx, cy + dy, s, '#2b2240');
+  drawSprite(c, spr, pal, cx, cy, s, tint);
+}
+function spriteURL(spr, pal, s) {
+  const ow = Math.max(1, Math.round(s / 2));
+  const w = spr[0].length * s + ow * 2, h = spr.length * s + ow * 2;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  drawOutlined(cv.getContext('2d'), spr, pal, w / 2, h / 2, s, null, ow);
+  return cv.toDataURL();
+}
+
+/* ================= storage ================= */
+const KEY = 'digit-dungeon-v1';
+let store = { profiles: [], lastId: null, sound: true, lang: (navigator.language || 'en').toLowerCase().startsWith('fr') ? 'fr' : 'en' };
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) store = Object.assign(store, JSON.parse(raw)); } catch (e) { }
+  if (!Array.isArray(store.profiles)) store.profiles = [];
+  if (store.lang !== 'fr') store.lang = 'en';
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
+
+/* ================= levels & problems ================= */
+const LV = {
+  1: { mode: 'choice', n: 2, timer: 0, free: true },
+  2: { mode: 'choice', n: 3, timer: 0, free: true },
+  3: { mode: 'choice', n: 3, timer: 0, free: true },
+  4: { mode: 'choice', n: 4, timer: 20, free: false },
+  5: { mode: 'choice', n: 4, timer: 15, free: false },
+  6: { mode: 'input', n: 0, timer: 20, free: false },
+  7: { mode: 'input', n: 0, timer: 15, free: false },
+  8: { mode: 'input', n: 0, timer: 25, free: false },
+  9: { mode: 'input', n: 0, timer: 25, free: false },
+  10: { mode: 'input', n: 0, timer: 20, free: false },
+};
+function gen(lv) {
+  const T = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const add = max => { const x = rnd(1, max - 1), y = rnd(1, max - x); return [`${x} + ${y} = ?`, x + y]; };
+  const sub = max => { const x = rnd(2, max), y = rnd(1, x); return [`${x} − ${y} = ?`, x - y]; };
+  const missAdd = max => { const x = rnd(1, max - 2), s = rnd(x + 1, max); return [`${x} + ? = ${s}`, s - x]; };
+  const missSub = max => { const s = rnd(3, max), y = rnd(1, s - 1); return [`${s} − ? = ${s - y}`, y]; };
+  const mul = (as, lo, hi) => { const x = pick(as), y = rnd(lo, hi); return Math.random() < .5 ? [`${x} × ${y} = ?`, x * y] : [`${y} × ${x} = ?`, x * y]; };
+  const div = () => { const b = rnd(2, 10), q = rnd(1, 10); return [`${b * q} ÷ ${b} = ?`, q]; };
+  const missMul = () => { const b = rnd(2, 10), q = rnd(2, 10); return Math.random() < .5 ? [`? × ${b} = ${b * q}`, q] : [`${b} × ? = ${b * q}`, q]; };
+  let r;
+  switch (lv) {
+    case 1: { const x = rnd(0, 5), y = rnd(1, 5); r = [`${x} + ${y} = ?`, x + y]; break; }
+    case 2: r = Math.random() < .6 ? add(10) : sub(10); break;
+    case 3: r = pick([() => add(20), () => sub(20), () => missAdd(20), () => missAdd(10)])(); break;
+    case 4: r = pick([() => add(50), () => sub(50), () => mul([2, 5, 10], 1, 10), () => missAdd(20)])(); break;
+    case 5: r = pick([() => mul(T, 1, 10), () => mul(T, 2, 10), () => missAdd(50), () => sub(50)])(); break;
+    case 6: r = pick([() => add(100), () => sub(100), () => mul(T, 2, 10), () => missAdd(100), () => missSub(50)])(); break;
+    case 7: r = pick([div, missMul, () => mul(T, 3, 10), () => add(100)])(); break;
+    case 8: r = pick([
+      () => { const x = rnd(11, 49), y = rnd(2, 9); return [`${x} × ${y} = ?`, x * y]; },
+      () => { const x = rnd(120, 900), y = rnd(15, 99); return [`${x} + ${y} = ?`, x + y]; },
+      () => { const x = rnd(120, 900), y = rnd(15, 99); return [`${x} − ${y} = ?`, x - y]; },
+      div])(); break;
+    case 9: r = pick([
+      () => { const x = rnd(1, 20), y = rnd(2, 9), z = rnd(2, 9); return [`${x} + ${y} × ${z} = ?`, x + y * z]; },
+      () => { const x = rnd(1, 6), y = rnd(1, 6), z = rnd(2, 9); return [`(${x} + ${y}) × ${z} = ?`, (x + y) * z]; },
+      () => { const y = rnd(2, 9), z = rnd(2, 9), x = rnd(1, y * z - 1); return [`${y} × ${z} − ${x} = ?`, y * z - x]; },
+      missMul])(); break;
+    default: r = pick([
+      () => { const b = rnd(3, 9), q = rnd(11, 25); return [`${b * q} ÷ ${b} = ?`, q]; },
+      () => { const x = rnd(12, 25), y = rnd(3, 9); return [`${x} × ${y} = ?`, x * y]; },
+      () => { const a = rnd(2, 9), b = rnd(2, 9), c = rnd(2, 9), d = rnd(2, 9); return [`${a} × ${b} + ${c} × ${d} = ?`, a * b + c * d]; },
+      () => { const a = rnd(3, 12), b = rnd(3, 12); return [`${a} × ? = ${a * b}`, b]; }])();
+  }
+  const p = Object.assign({ text: r[0], answer: r[1] }, LV[lv] || LV[10]);
+  if (p.mode === 'choice') p.opts = makeChoices(p);
+  return p;
+}
+function makeChoices(p) {
+  const a = p.answer, set = new Set([a]);
+  const near = shuffle([a + 1, a - 1, a + 2, a - 2, a + 3]);
+  const far = a >= 10 ? shuffle([a + 10, a - 10]) : [];
+  for (const v of near.concat(far)) { if (set.size >= p.n) break; if (v >= 0) set.add(v); }
+  let k = 4; while (set.size < p.n) set.add(a + k++);
+  return [...set].sort((x, y) => x - y);
+}
+
+const tipFor = lv => { const band = lv <= 3 ? 'low' : lv <= 6 ? 'mid' : 'high'; return { band, i: rnd(0, I18N.en.tips[band].length - 1) }; };
+const tipText = tp => { const v = t('tips'); return frSpace(v[tp.band][tp.i]); };
+
+/* ================= sound ================= */
+let AC = null;
+function sfx(type) {
+  if (!store.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const seq = { good: [660, 880], bad: [260, 180], coin: [988, 1319], door: [392, 523], win: [523, 659, 784, 1047], tap: [520] }[type] || [440];
+    seq.forEach((f, i) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = 'square'; o.frequency.value = f;
+      const st = AC.currentTime + i * 0.08;
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.06, st + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + 0.12);
+      o.connect(g); g.connect(AC.destination); o.start(st); o.stop(st + 0.14);
+    });
+  } catch (e) { }
+}
+
+/* ================= state ================= */
+let P = null;   // current profile
+let R = null;   // current run
+const level = () => clamp(Math.floor(P.rating), 1, 10);
+const runLevel = () => clamp(level() + (R && !R.over ? R.bonus : 0), 1, 10);
+const potionCap = () => runLevel() <= 3 ? 3 : 1;
+const ICON = {};
+
+function show(id) {
+  for (const s of ['scr-title', 'scr-lobby', 'scr-game', 'scr-stats']) $('#' + s).hidden = s !== id;
+  if (id === 'scr-game') requestAnimationFrame(fit);
+}
+
+/* ================= title / profiles ================= */
+let startRating = 1;
+function renderTitle() {
+  const list = $('#heroList'); list.replaceChildren();
+  for (const p of store.profiles) {
+    const row = el('div', 'hero-row');
+    const play = btn('', 'play', () => { P = migrate(p); store.lastId = p.id; save(); renderLobby(); show('scr-lobby'); });
+    const img = el('img', 'px'); img.src = spriteURL(SPR.hero, heroPal(p.skin), 3); img.alt = '';
+    const txt = el('span'); txt.textContent = p.name;
+    const sm = el('small', null, t('rowSub', clamp(Math.floor(p.rating), 1, 10), p.bestRoom));
+    txt.appendChild(sm);
+    play.append(img, txt);
+    const del = btn(t('del'), 'del small', () => {
+      if (!del.classList.contains('armed')) { del.classList.add('armed'); del.textContent = t('sure'); setTimeout(() => { del.classList.remove('armed'); del.textContent = t('del'); }, 2500); return; }
+      store.profiles = store.profiles.filter(x => x.id !== p.id); save(); renderTitle();
+    });
+    del.setAttribute('aria-label', t('del') + ' ' + p.name);
+    row.append(play, del);
+    list.appendChild(row);
+  }
+  $('#btnNew').hidden = false; $('#newForm').hidden = true;
+  if (!store.profiles.length) openNew();
+}
+function openNew() {
+  $('#btnNew').hidden = true; $('#newForm').hidden = false; $('#nameIn').value = '';
+  startRating = 1;
+  document.querySelectorAll('#startSeg .btn').forEach(b => b.classList.toggle('on', b.dataset.r === '1'));
+}
+$('#btnNew').addEventListener('click', openNew);
+document.querySelectorAll('#langSeg .btn').forEach(b => b.addEventListener('click', () => { store.lang = b.dataset.lang; save(); applyLang(); renderTitle(); }));
+$('#btnCancel').addEventListener('click', () => { if (store.profiles.length) { $('#btnNew').hidden = false; $('#newForm').hidden = true; } });
+document.querySelectorAll('#startSeg .btn').forEach(b => b.addEventListener('click', () => {
+  startRating = +b.dataset.r;
+  document.querySelectorAll('#startSeg .btn').forEach(x => x.classList.toggle('on', x === b));
+}));
+$('#btnCreate').addEventListener('click', () => {
+  const name = $('#nameIn').value.trim();
+  if (!name) { $('#nameIn').classList.add('shake'); $('#nameIn').placeholder = t('nameNeeded'); setTimeout(() => $('#nameIn').classList.remove('shake'), 300); $('#nameIn').focus(); return; }
+  const p = migrate({ id: 'h' + Date.now().toString(36), name, skin: 0, unlocked: [0], rating: startRating, bestRoom: 0, bestStreak: 0, gold: 0 });
+  stats(p);
+  store.profiles.push(p); store.lastId = p.id; save();
+  P = p; renderLobby(); show('scr-lobby');
+});
+
+/* ================= shop & achievements ================= */
+function migrate(p) {
+  if (p.wallet == null) p.wallet = p.gold || 0;
+  if (!Array.isArray(p.pets)) p.pets = [];
+  if (p.pet == null) p.pet = -1;
+  if (p.dragons == null) p.dragons = 0;
+  if (p.solved == null) p.solved = (p.stats && p.stats.ok) || 0;
+  if (!p.boosts) p.boosts = { heart: false, potion: false };
+  if (!p.opOk) p.opOk = {};
+  if (p.maxLv == null) p.maxLv = clamp(Math.floor(p.rating), 1, 10);
+  if (p.bestFloor == null) p.bestFloor = 0;
+  return p;
+}
+const progressOf = (k, o) => k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
+const greyPal = pal => Object.fromEntries(Object.keys(pal).map(k => [k, '#6a5a86']));
+function checkAchievements() {
+  SKINS.forEach((s, i) => {
+    if (s.req && !P.unlocked.includes(i) && progressOf(s.req[0], s.req[2]) >= s.req[1]) { P.unlocked.push(i); toast(t('newOutfit', t('skins')[i]), 'flame'); sfx('win'); }
+  });
+  PETS.forEach((p, i) => {
+    if (p.req && !P.pets.includes(i) && progressOf(p.req[0], p.req[2]) >= p.req[1]) { P.pets.push(i); toast(t('newPet', t('petNames')[i]), 'flame'); sfx('win'); }
+  });
+  save();
+}
+function itemImg(kind, i, owned, s) {
+  const it = kind === 'skin' ? SKINS[i] : PETS[i];
+  const spr = kind === 'skin' ? SPR.hero : it.spr, pal = kind === 'skin' ? heroPal(i) : it.pal;
+  const img = el('img', 'px'); img.alt = '';
+  img.src = spriteURL(spr, owned || it.cost ? pal : greyPal(pal), s);
+  return img;
+}
+function renderShop(kind) {
+  const list = kind === 'skin' ? SKINS : PETS, box = kind === 'skin' ? $('#wardrobe') : $('#petShop');
+  const owns = i => kind === 'skin' ? P.unlocked.includes(i) : P.pets.includes(i);
+  const cur = kind === 'skin' ? P.skin : P.pet;
+  box.replaceChildren();
+  if (kind === 'pet') {
+    const b = btn('', 'skin' + (P.pet === -1 ? ' on' : ''), () => { P.pet = -1; save(); sfx('tap'); renderLobby(); });
+    b.append(el('span', 'none', '–'), el('span', null, t('noPet')));
+    box.appendChild(b);
+  }
+  list.forEach((it, i) => {
+    const owned = owns(i);
+    const b = btn('', 'skin' + (cur === i ? ' on' : '') + (owned ? '' : it.cost ? ' buy' : ' locked'), () => {
+      if (owned) { if (kind === 'skin') P.skin = i; else P.pet = i; save(); sfx('tap'); renderLobby(); }
+      else openInfo(kind, i);
+    });
+    b.appendChild(itemImg(kind, i, owned, kind === 'skin' ? 3 : 4));
+    if (owned) b.appendChild(el('span', null, (kind === 'skin' ? t('skins') : t('petNames'))[i]));
+    else if (it.cost) { const pr = el('span', 'price'); const c = el('img', 'px'); c.src = ICON.coin; c.alt = ''; pr.append(c, document.createTextNode(it.cost)); b.appendChild(pr); }
+    else b.appendChild(el('span', null, '★ ' + t('special')));
+    box.appendChild(b);
+  });
+}
+function openInfo(kind, i) {
+  const it = kind === 'skin' ? SKINS[i] : PETS[i];
+  const name = (kind === 'skin' ? t('skins') : t('petNames'))[i];
+  const big = itemImg(kind, i, false, kind === 'skin' ? 7 : 9); big.classList.add('big');
+  const nodes = [big, el('h2', null, name)];
+  if (it.cost) {
+    const buy = btn(t('buy', it.cost), 'gold', () => {
+      if (P.wallet < it.cost) return;
+      P.wallet -= it.cost;
+      if (kind === 'skin') { P.unlocked.push(i); P.skin = i; } else { P.pets.push(i); P.pet = i; }
+      save(); sfx('coin'); closeModal(); renderLobby();
+    });
+    if (P.wallet < it.cost) { buy.disabled = true; nodes.push(el('p', 'req', t('needMore', it.cost - P.wallet))); }
+    nodes.push(buy);
+  } else {
+    const [k, n, o] = it.req, c = Math.min(progressOf(k, o), n);
+    const bar = el('div', 'prog'), fill = el('i'); fill.style.width = Math.round(c / n * 100) + '%'; bar.appendChild(fill);
+    nodes.push(el('p', 'req', t('req', k, n, o)), bar, el('p', null, t('progress', c, n)));
+  }
+  nodes.push(btn(t('close'), '', closeModal));
+  modal(nodes); $('#modalCard').classList.add('info');
+}
+function renderBoosts() {
+  const box = $('#boosts'); box.replaceChildren();
+  for (const k of ['heart', 'potion']) {
+    const cost = BOOSTS[k], on = P.boosts[k];
+    const useless = k === 'potion' && potionCap() <= 1;
+    const b = btn('', on ? 'on' : '', () => {
+      if (on) { P.wallet += cost; P.boosts[k] = false; }
+      else if (P.wallet >= cost) { P.wallet -= cost; P.boosts[k] = true; sfx('coin'); }
+      else { b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 300); return; }
+      save(); renderLobby();
+    });
+    const ic = el('img', 'px'); ic.src = ICON[k]; ic.alt = '';
+    b.append(ic, el('span', null, t(k === 'heart' ? 'boostHeart' : 'boostPotion')));
+    if (on) b.appendChild(el('small', null, t('boostOn')));
+    else if (useless) { b.appendChild(el('small', null, t('potionMax', potionCap()))); b.disabled = true; }
+    else { const pr = el('small', 'price'); const c = el('img', 'px'); c.src = ICON.coin; c.alt = ''; c.style.cssText = 'width:13px;height:13px'; pr.append(c, document.createTextNode(' ' + cost)); b.appendChild(pr); }
+    box.appendChild(b);
+  }
+}
+
+/* ================= lobby ================= */
+function renderLobby() {
+  migrate(P);
+  $('#lobbyHero').src = spriteURL(SPR.hero, heroPal(P.skin), 8);
+  $('#lobbyName').textContent = P.name;
+  const lv = level();
+  $('#lobbyLvl').textContent = t('level', lv);
+  $('#lobbyBar').style.width = (lv >= 10 ? 100 : Math.round((P.rating - lv) * 100)) + '%';
+  $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.gold;
+  $('#lvVal').textContent = lv; $('#lvDesc').textContent = t('lvDesc')[lv - 1];
+  $('#wallet').textContent = P.wallet; $('#walletIco').src = ICON.coin;
+  const lp = $('#lobbyPet');
+  if (P.pet >= 0) { lp.src = spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 5); lp.hidden = false; } else lp.hidden = true;
+  renderShop('skin'); renderShop('pet'); renderBoosts();
+}
+$('#lvDown').addEventListener('click', () => { P.rating = clamp(level() - 1, 1, 10); save(); renderLobby(); });
+$('#lvUp').addEventListener('click', () => { P.rating = clamp(level() + 1, 1, 10); save(); renderLobby(); });
+$('#btnStats').addEventListener('click', () => { renderStats(); show('scr-stats'); });
+$('#btnStatsBack').addEventListener('click', () => { renderLobby(); show('scr-lobby'); });
+$('#btnSwitch').addEventListener('click', () => { renderTitle(); show('scr-title'); });
+$('#btnPlay').addEventListener('click', () => { sfx('door'); startRun(); });
+
+/* ================= canvas & fx ================= */
+const cv = $('#cv'), cx = cv.getContext('2d');
+const bg = document.createElement('canvas'); bg.width = 128; bg.height = 128;
+const HOME = { x: 64, y: 98 }, ENC = { x: 64, y: 56 };
+const DOOR = {
+  top: { x: 56, y: 0, w: 16, h: 12, hx: 64, hy: 14, label: 'Middle' },
+  left: { x: 0, y: 56, w: 12, h: 16, hx: 14, hy: 64, label: 'Left' },
+  right: { x: 116, y: 56, w: 12, h: 16, hx: 114, hy: 64, label: 'Right' },
+};
+const THEMES = [
+  { f1: '#ecca8c', f2: '#e3bd78', g: '#cfa45f', w: '#5b4a86', wd: '#43356a', wl: '#7a68a8', dot: '#c99a55' },
+  { f1: '#a8d98a', f2: '#9bcf7c', g: '#7fb563', w: '#4d6b8a', wd: '#36506b', wl: '#6a8bac', dot: '#5f9a4a' },
+  { f1: '#bcd6f2', f2: '#adcaea', g: '#8aaed6', w: '#8a5a4a', wd: '#6a4034', wl: '#a8786a', dot: '#7f9fc6' },
+];
+const BOSS_THEME = { f1: '#f6bb8e', f2: '#efad7c', g: '#d98d5a', w: '#4a3d66', wd: '#33284a', wl: '#65558a', dot: '#d27a45' };
+const tw = { x: 64, y: 140, fx: 64, fy: 140, tx: 64, ty: 140, t0: 0, d: 1 };
+const fx = { heroLunge: -1e9, encLunge: -1e9, heroHurt: -1e9, encHit: -1e9, shake: -1e9, wiggle: -1e9, fadeOut: 0, fadeIn: 0 };
+let parts = [];
+
+function moveTo(x, y, d) { tw.fx = tw.x; tw.fy = tw.y; tw.tx = x; tw.ty = y; tw.t0 = now(); tw.d = d; }
+function burst(x, y, col, n, up) {
+  for (let i = 0; i < n; i++) parts.push({ x, y, vx: (Math.random() - .5) * 2.4, vy: up ? -Math.random() * 2.2 - .6 : (Math.random() - .5) * 2.4, life: 0, max: 40 + rnd(0, 20), col: Array.isArray(col) ? pick(col) : col });
+}
+
+function buildBg(theme, seed) {
+  const c = bg.getContext('2d'), r = mulberry(seed);
+  c.fillStyle = theme.w; c.fillRect(0, 0, 128, 128);
+  for (let y = 0, row = 0; y < 128; y += 4, row++) {
+    for (let x = (row % 2) * 4 - 4; x < 128; x += 8) {
+      c.fillStyle = theme.wd; c.fillRect(x, y, 8, 1); c.fillRect(x, y, 1, 4);
+      c.fillStyle = theme.wl; c.fillRect(x + 1, y + 1, 5, 1);
+    }
+  }
+  for (let ty = 0; ty < 13; ty++) for (let tx = 0; tx < 13; tx++) {
+    c.fillStyle = (tx + ty) % 2 ? theme.f1 : theme.f2;
+    c.fillRect(12 + tx * 8, 12 + ty * 8, 8, 8);
+    c.fillStyle = theme.g; c.fillRect(12 + tx * 8, 12 + ty * 8, 8, 1); c.fillRect(12 + tx * 8, 12 + ty * 8, 1, 8);
+  }
+  for (let i = 0; i < 9; i++) { c.fillStyle = theme.dot; c.fillRect(14 + Math.floor(r() * 100), 14 + Math.floor(r() * 100), 1 + Math.floor(r() * 2), 1); }
+  c.fillStyle = 'rgba(29,22,48,.22)'; c.fillRect(12, 12, 104, 3); c.fillRect(12, 15, 2, 101);
+  c.fillStyle = theme.wd; c.fillRect(11, 11, 106, 1); c.fillRect(11, 11, 1, 106); c.fillRect(116, 11, 1, 106); c.fillRect(11, 116, 106, 1);
+  c.fillStyle = theme.f2; c.fillRect(56, 116, 16, 12);
+  c.fillStyle = 'rgba(29,22,48,.35)'; c.fillRect(56, 122, 16, 6);
+}
+
+function drawDoors(t) {
+  const room = R.room, blink = R.phase === 'doors' && Math.floor(t / 400) % 2 === 0;
+  for (const d of room.doors) {
+    const r = DOOR[d.side];
+    cx.fillStyle = '#2b1d12'; cx.fillRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
+    if (d.open) {
+      cx.fillStyle = '#1d1630'; cx.fillRect(r.x, r.y, r.w, r.h);
+      cx.fillStyle = 'rgba(255,200,61,.35)';
+      if (d.side === 'top') cx.fillRect(r.x + 2, r.y + r.h - 3, r.w - 4, 3);
+      else cx.fillRect(d.side === 'left' ? r.x + r.w - 3 : r.x, r.y + 2, 3, r.h - 4);
+    } else {
+      cx.fillStyle = '#b06a32'; cx.fillRect(r.x, r.y, r.w, r.h);
+      cx.fillStyle = '#7a4520';
+      if (d.side === 'top') { for (let i = 4; i < r.w; i += 4) cx.fillRect(r.x + i, r.y, 1, r.h); }
+      else { for (let i = 4; i < r.h; i += 4) cx.fillRect(r.x, r.y + i, r.w, 1); }
+      if (room.locked) {
+        const lx = r.x + r.w / 2, ly = r.y + r.h / 2 + 1;
+        cx.fillStyle = '#2b2240'; cx.fillRect(lx - 3, ly - 2, 6, 5);
+        cx.fillStyle = '#ffc83d'; cx.fillRect(lx - 2, ly - 1, 4, 3);
+        cx.fillStyle = '#ffc83d'; cx.fillRect(lx - 2, ly - 4, 1, 2); cx.fillRect(lx + 1, ly - 4, 1, 2); cx.fillRect(lx - 1, ly - 5, 2, 1);
+        cx.fillStyle = '#2b2240'; cx.fillRect(lx - 1, ly, 1, 1);
+      }
+    }
+    if (blink) {
+      cx.fillStyle = '#ffc83d';
+      cx.fillRect(r.x - 2, r.y - 2, r.w + 4, 1); cx.fillRect(r.x - 2, r.y + r.h + 1, r.w + 4, 1);
+      cx.fillRect(r.x - 2, r.y - 2, 1, r.h + 4); cx.fillRect(r.x + r.w + 1, r.y - 2, 1, r.h + 4);
+    }
+  }
+}
+function drawTorches(t) {
+  for (const x of [30, 97]) {
+    cx.fillStyle = '#4a3020'; cx.fillRect(x, 5, 2, 5);
+    const f = Math.floor(t / 120 + x) % 3;
+    cx.fillStyle = '#ff7a2f'; cx.fillRect(x - 1, 1 + (f === 1 ? 1 : 0), 4, 4);
+    cx.fillStyle = '#ffc83d'; cx.fillRect(x, 2 + (f === 2 ? 1 : 0), 2, 3);
+  }
+}
+function drawEnc(t) {
+  const e = R.room.enc; if (!e) return;
+  if ((e.kind === 'monster' || e.kind === 'boss') && !e.alive) return;
+  let x = ENC.x, y = ENC.y + Math.round(Math.sin(t / 350) * 1.5);
+  if (t - fx.encLunge < 300) y += Math.round(Math.sin((t - fx.encLunge) / 300 * Math.PI) * 16);
+  if (t - fx.wiggle < 300) x += Math.round(Math.sin((t - fx.wiggle) / 35) * 2);
+  const tint = t - fx.encHit < 140 ? '#ffffff' : null;
+  cx.fillStyle = 'rgba(29,22,48,.2)';
+  if (e.kind === 'monster') { cx.fillRect(x - 14, ENC.y + 16, 28, 3); drawOutlined(cx, SPR[e.sprite], MONSTERS[e.sprite].pal, x, y, 3, tint); }
+  else if (e.kind === 'boss') { cx.fillRect(x - 20, ENC.y + 23, 40, 3); drawOutlined(cx, SPR.dragon, PAL.dragon, x, y, 3, tint); }
+  else if (e.kind === 'chest') { cx.fillRect(x - 15, ENC.y + 16, 30, 3); drawOutlined(cx, e.opened ? SPR.chestOpen : SPR.chest, e.golden ? PAL.goldChest : PAL.chest, x, ENC.y + (t - fx.wiggle < 300 ? Math.round(Math.sin((t - fx.wiggle) / 35) * 1) : 0), 3, tint); }
+  else if (e.kind === 'coach') { cx.fillRect(x - 12, ENC.y + 16, 24, 3); drawOutlined(cx, SPR.owl, PAL.owl, x, y, 3, null); }
+}
+const pet = { x: 46, y: 140 };
+function drawPet(t) {
+  if (P.pet < 0 || !PETS[P.pet]) return;
+  const tx = tw.x - 18, ty = tw.y + 6;
+  pet.x += (tx - pet.x) * .08; pet.y += (ty - pet.y) * .08;
+  const hop = Math.abs(tx - pet.x) + Math.abs(ty - pet.y) > 1 ? Math.floor(t / 120) % 2 : Math.round(Math.sin(t / 400));
+  cx.fillStyle = 'rgba(29,22,48,.2)'; cx.fillRect(Math.round(pet.x) - 6, Math.round(pet.y) + 8, 12, 2);
+  drawOutlined(cx, PETS[P.pet].spr, PETS[P.pet].pal, Math.round(pet.x), Math.round(pet.y) - hop, 2, null);
+}
+function drawHero(t) {
+  let x = tw.x, y = tw.y;
+  const moving = t - tw.t0 < tw.d;
+  if (moving) y += Math.floor(t / 110) % 2;
+  if (t - fx.heroLunge < 260) y -= Math.round(Math.sin((t - fx.heroLunge) / 260 * Math.PI) * 14);
+  const hurt = t - fx.heroHurt < 500 && Math.floor((t - fx.heroHurt) / 80) % 2 === 0;
+  cx.fillStyle = 'rgba(29,22,48,.2)'; cx.fillRect(Math.round(x) - 9, Math.round(tw.y) + 11, 18, 2);
+  drawOutlined(cx, SPR.hero, heroPal(P.skin), Math.round(x), Math.round(y), 2, hurt ? '#ff6464' : null);
+}
+function render(t) {
+  const k = clamp((t - tw.t0) / tw.d, 0, 1), e = 1 - (1 - k) * (1 - k);
+  tw.x = tw.fx + (tw.tx - tw.fx) * e; tw.y = tw.fy + (tw.ty - tw.fy) * e;
+  cx.save();
+  if (t - fx.shake < 220) cx.translate(rnd(-2, 2), rnd(-1, 1));
+  cx.drawImage(bg, 0, 0);
+  drawTorches(t); drawDoors(t); drawEnc(t); drawPet(t); drawHero(t);
+  parts = parts.filter(p => p.life < p.max);
+  for (const p of parts) { p.life++; p.x += p.vx; p.y += p.vy; p.vy += .06; cx.fillStyle = p.col; cx.fillRect(Math.round(p.x), Math.round(p.y), 2, 2); }
+  cx.restore();
+  let a = 0;
+  if (fx.fadeOut) a = clamp((t - fx.fadeOut) / 250, 0, 1);
+  else if (fx.fadeIn) { a = 1 - clamp((t - fx.fadeIn) / 300, 0, 1); if (a <= 0) fx.fadeIn = 0; }
+  if (a > 0) { cx.fillStyle = `rgba(29,22,48,${a})`; cx.fillRect(0, 0, 128, 128); }
+}
+function fit() {
+  const st = $('#stage'); const s = Math.floor(Math.min(st.clientWidth, st.clientHeight));
+  if (s > 0) { $('#cw').style.width = s + 'px'; $('#cw').style.height = s + 'px'; }
+}
+addEventListener('resize', fit);
+
+/* ================= game loop & timer ================= */
+let paused = false, pausedAt = 0;
+function loop(t) {
+  requestAnimationFrame(loop);
+  if (!R || $('#scr-game').hidden) return;
+  render(t);
+  const q = R.q;
+  if (q && !q.done && q.p.timer && R.phase === 'question' && !paused) {
+    const left = 1 - (t - q.t0) / (q.p.timer * 1000);
+    $('#timerFill').style.width = Math.max(0, left * 100) + '%';
+    $('#timer').classList.toggle('low', left < .3);
+    if (left <= 0) wrong(null, true);
+  }
+}
+requestAnimationFrame(loop);
+
+/* ================= HUD & panel ================= */
+function hud() {
+  const h = $('#hudHearts'); h.replaceChildren();
+  for (let i = 0; i < R.hp; i++) { const im = el('img', 'px'); im.src = ICON.heart; im.alt = ''; h.appendChild(im); }
+  h.setAttribute('aria-label', R.hp + ' hearts');
+  $('#hudPotion').textContent = R.potions; $('#hudGold').textContent = R.gold;
+  $('#hudStreak').textContent = R.streak; $('#hudRoom').textContent = t('room', R.depth, R.floor * 6);
+}
+function toast(text, icon) {
+  const t = el('div', 'toast');
+  if (icon) { const im = el('img', 'px'); im.src = ICON[icon]; im.alt = ''; t.appendChild(im); }
+  t.appendChild(el('span', null, text));
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 1950);
+}
+function say(s) { $('#msg').textContent = s; }
+function aside(node) { $('#msgAside').replaceChildren(...(node ? [node] : [])); }
+function setAnswers(cls, nodes) { const a = $('#answers'); a.className = 'answers ' + cls; a.replaceChildren(...nodes); }
+
+/* ================= run flow ================= */
+function later(fn, ms) { const run = R; setTimeout(() => { if (R === run && !run.over) fn(); }, ms); }
+
+function startRun() {
+  migrate(P);
+  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, bonus: 0, streak: 0, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
+  P.boosts = { heart: false, potion: false }; save();
+  pet.x = 46; pet.y = 140;
+  show('scr-game'); fit(); nextRoom();
+}
+function makeRoom(depth) {
+  const lv = runLevel();
+  let type;
+  if (depth === 1) type = 'monster';
+  else if (depth % 6 === 0) type = 'boss';
+  else {
+    const r = Math.random();
+    type = r < .4 ? 'monster' : r < .62 ? 'chest' : (r < .76 && R.room && R.room.type !== 'coach') ? 'coach' : 'empty';
+  }
+  const sides = pick([['left', 'top', 'right'], ['left', 'top'], ['top', 'right'], ['left', 'right'], ['left', 'top', 'right']]);
+  const locked = type === 'empty' ? true : type === 'coach' || depth === 1 ? false : Math.random() < .4;
+  const room = { type, locked, doors: sides.map(s => ({ side: s, open: !locked, p: null })), enc: null };
+  const pool = lv <= 3 ? ['slime', 'bat'] : lv <= 6 ? ['slime', 'bat', 'goblin'] : ['bat', 'goblin'];
+  if (type === 'monster') room.enc = { kind: 'monster', sprite: pick(pool), need: 1, progress: 0, alive: true };
+  if (type === 'boss') room.enc = { kind: 'boss', need: clamp(2 + Math.floor((lv - 1) / 3), 2, 5), progress: 0, alive: true };
+  if (type === 'chest') { const golden = lv >= 4 && Math.random() < .35; room.enc = { kind: 'chest', golden, need: golden ? (lv >= 8 ? 3 : 2) : 1, progress: 0, opened: false }; }
+  if (type === 'coach') room.enc = { kind: 'coach', tip: tipFor(lv) };
+  return room;
+}
+function nextRoom() {
+  R.depth++; R.q = null; R.phase = 'enter';
+  R.room = makeRoom(R.depth);
+  if (R.depth > P.bestRoom) { P.bestRoom = R.depth; save(); later(checkAchievements, 700); }
+  buildBg(R.room.type === 'boss' ? BOSS_THEME : THEMES[(R.depth - 1) % THEMES.length], R.depth * 7919 + 13);
+  fx.fadeOut = 0; fx.fadeIn = now();
+  tw.x = tw.fx = tw.tx = 64; tw.y = tw.fy = 134; moveTo(HOME.x, HOME.y, 550);
+  hud(); $('#qbox').hidden = true; aside(null); setAnswers('', []); say('');
+  later(afterEnter, 600);
+}
+function afterEnter() {
+  const e = R.room.enc;
+  if (!e) return showDoors();
+  if (e.kind === 'monster') { say(t('monIntro', tt('mon', e.sprite))); ask({ kind: 'enc' }); }
+  else if (e.kind === 'boss') { say(t('bossIntro', e.need)); ask({ kind: 'enc' }); }
+  else if (e.kind === 'chest') { say(e.golden ? t('goldChest', e.need) : t('chest')); ask({ kind: 'enc' }); }
+  else if (e.kind === 'coach') showCoach();
+}
+function showCoach() {
+  R.phase = 'coach'; $('#qbox').hidden = true; aside(null);
+  say(t('owlMeet'));
+  const box = el('div', 'card coach');
+  const im = el('img', 'px'); im.src = spriteURL(SPR.owl, PAL.owl, 3); im.alt = '';
+  const p = el('p'); p.appendChild(el('b', null, t('hootSays'))); p.appendChild(document.createTextNode(tipText(R.room.enc.tip)));
+  box.append(im, p);
+  setAnswers('', [box, btn(t('thanks'), 'primary', () => { sfx('tap'); showDoors(); })]);
+}
+function showDoors() {
+  R.phase = 'doors'; R.q = null; $('#qbox').hidden = true; aside(null);
+  const locked = R.room.doors.some(d => !d.open);
+  say(locked ? t('doorsLocked') : t('doorsOpen'));
+  const order = ['left', 'top', 'right'];
+  const doors = R.room.doors.slice().sort((a, b) => order.indexOf(a.side) - order.indexOf(b.side));
+  setAnswers('doors', doors.map(d => btn((d.open ? '' : '🔒 ') + tt('doors', d.side), d.open ? 'gold' : '', () => doorTap(d))));
+}
+function doorTap(d) {
+  if (R.phase !== 'doors') return;
+  sfx('tap');
+  if (d.open) return walkThrough(d);
+  say(t('lockAsks'));
+  ask({ kind: 'door', door: d });
+}
+function walkThrough(d) {
+  R.phase = 'walk'; R.q = null; setAnswers('', []); $('#qbox').hidden = true; aside(null); say('');
+  const r = DOOR[d.side]; moveTo(r.hx, r.hy, 450); sfx('door');
+  later(() => { fx.fadeOut = now(); }, 380);
+  later(nextRoom, 680);
+}
+
+/* ================= questions ================= */
+function ask(ctx) {
+  let p;
+  if (ctx.kind === 'door') { ctx.door.p = ctx.door.p || gen(runLevel()); p = ctx.door.p; }
+  else p = gen(runLevel());
+  R.phase = 'question';
+  R.q = { p, ctx, t0: now(), wrongs: 0, typed: '', done: false };
+  renderQ();
+}
+function renderQ(state) {
+  const q = R.q, p = q.p;
+  $('#qbox').hidden = false;
+  const qt = $('#qtext'); qt.className = 'qtext' + (p.text.length > 12 ? ' long' : '') + (state ? ' ' + state : '');
+  const shown = state ? String(p.answer) : (q.typed || '?');
+  const [a, b] = p.text.split('?');
+  qt.replaceChildren(document.createTextNode(a), el('span', 'slot', shown), document.createTextNode(b));
+  $('#timer').hidden = !p.timer;
+  if (p.timer && !state) { $('#timerFill').style.width = '100%'; $('#timer').classList.remove('low'); }
+  const e = R.room.enc, pips = $('#pips'); pips.replaceChildren();
+  if (q.ctx.kind === 'enc' && e && e.need > 1) { const filled = e.progress + (state === 'good' ? 1 : 0); for (let i = 0; i < e.need; i++) pips.appendChild(el('i', i < filled ? 'on' : '')); }
+  if (state) return;
+  if (p.mode === 'choice') {
+    setAnswers('choices n' + p.opts.length, p.opts.map(v => { const b = btn(String(v), 'num', () => submit(v, b)); return b; }));
+  } else {
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'OK'];
+    setAnswers('keypad', keys.map(k => btn(k, k === 'OK' ? 'primary num' : 'num', () => key(k))));
+  }
+  if (q.ctx.kind === 'door' && R.room.doors.filter(d => !d.open).length > 1) aside(btn(t('otherDoor'), 'small', () => { sfx('tap'); showDoors(); }));
+  else if (q.ctx.kind === 'enc' && e.kind === 'chest') aside(btn(t('leaveIt'), 'small', () => { sfx('tap'); showDoors(); }));
+  else aside(null);
+}
+function key(k) {
+  const q = R.q; if (!q || q.done) return;
+  sfx('tap');
+  if (k === '⌫') q.typed = q.typed.slice(0, -1);
+  else if (k === 'OK') { if (q.typed) submit(parseInt(q.typed, 10)); return; }
+  else if (q.typed.length < 4) q.typed = (q.typed === '0' ? '' : q.typed) + k;
+  const slot = $('#qtext .slot'); if (slot) slot.textContent = q.typed || '?';
+}
+function submit(v, b) {
+  const q = R.q; if (!q || q.done || R.phase !== 'question') return;
+  if (v === q.p.answer) right((now() - q.t0) / 1000);
+  else wrong(b, false);
+}
+
+function right(dt) {
+  const q = R.q; q.done = true; sfx('good');
+  if (!q.wrongs) record(q, true, dt);
+  R.streak++; R.solved++; P.solved++;
+  { const c = catOf(q.p.text); P.opOk[c] = (P.opOk[c] || 0) + 1; }
+  if (R.streak > P.bestStreak) P.bestStreak = R.streak;
+  const before = level();
+  const fast = dt < (q.p.timer ? q.p.timer * .35 : 4);
+  P.rating = clamp(P.rating + (q.wrongs ? .08 : .2) + (fast && !q.wrongs ? .1 : 0), 1, 10.99);
+  if (dt < 2 && !q.wrongs && q.ctx.kind !== 'door') { if (R.potions < potionCap()) { R.potions++; toast(t('fast'), 'potion'); } }
+  if (R.streak >= 5 && R.streak % 5 === 0) toast(t('streak', R.streak), 'flame');
+  checkAchievements();
+  const after = level();
+  if (after > before) toast(t('levelUp', after));
+  const st = stats(P); st.maxLv = Math.max(st.maxLv || 0, after); P.maxLv = Math.max(P.maxLv || 0, after);
+  save(); hud();
+  renderQ('good'); $('#answers').classList.add('off');
+  say(pick(t('praise')));
+  later(() => resolveRight(q.ctx), 600);
+}
+function resolveRight(ctx) {
+  const tn = now();
+  if (ctx.kind === 'door') {
+    ctx.door.open = true; ctx.door.p = null;
+    const r = DOOR[ctx.door.side]; burst(r.x + r.w / 2, r.y + r.h / 2, ['#ffc83d', '#fff3a6'], 12);
+    return walkThrough(ctx.door);
+  }
+  const e = R.room.enc;
+  e.progress++;
+  if (e.kind === 'monster' || e.kind === 'boss') {
+    fx.heroLunge = tn; later(() => { fx.encHit = now(); }, 120);
+    if (e.progress >= e.need) {
+      later(() => {
+        e.alive = false; fx.shake = now();
+        burst(ENC.x, ENC.y, [e.kind === 'boss' ? '#ff7a45' : MONSTERS[e.sprite].col, '#ffffff'], 26);
+        const g = (e.kind === 'boss' ? 5 : 1) * (1 + R.bonus); R.gold += g;
+        if (e.kind === 'boss') { P.dragons++; later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten', g), 'coin'); sfx('win'); }
+        else { toast(t('gold', g), 'coin'); sfx('coin'); }
+        save(); hud();
+        say(e.kind === 'boss' ? t('emberGone') : t('poof'));
+      }, 260);
+      later(e.kind === 'boss' ? floorCleared : showDoors, 1300);
+    } else {
+      say(t('hitMore', e.need - e.progress));
+      later(() => ask(ctx), 500);
+    }
+  } else if (e.kind === 'chest') {
+    if (e.progress >= e.need) {
+      e.opened = true; sfx('coin');
+      burst(ENC.x, ENC.y - 6, ['#ffc83d', '#fff3a6', '#ffffff'], 22, true);
+      if (R.potions < potionCap() && Math.random() < (e.golden ? .5 : .35)) { R.potions++; toast(t('potion'), 'potion'); }
+      else { const g = (e.golden ? rnd(5, 8) : rnd(2, 4)) * (1 + R.bonus); R.gold += g; toast(t('gold', g), 'coin'); }
+      save(); hud(); say(t('chestOpen'));
+      later(showDoors, 1100);
+    } else {
+      say(t('clickMore', e.need - e.progress));
+      later(() => ask(ctx), 500);
+    }
+  }
+}
+function wrong(b, timeout) {
+  const q = R.q; if (!q || q.done) return;
+  if (!q.wrongs) record(q, false, 0);
+  R.streak = 0; sfx('bad');
+  const before = level();
+  P.rating = clamp(P.rating - .3, 1, 10.99);
+  if (level() < before) toast(t('levelDown', level()));
+  const e = R.room.enc, isEnc = q.ctx.kind === 'enc';
+  const freeTry = false; // potions are the only free tries against monsters, bosses and chests
+  const isDoor = q.ctx.kind === 'door';
+  const doorFree = isDoor && q.p.free && !timeout;
+  const usePotion = !isDoor && R.potions > 0;
+  q.wrongs++;
+  if (isEnc && e.need > 1) e.progress = 0;
+  hud();
+  if (freeTry || doorFree || usePotion) {
+    if (!freeTry && !doorFree) { R.potions--; hud(); toast(t('potionUsed'), 'potion'); }
+    if (b) b.classList.add('nope');
+    if (q.p.mode === 'input') { q.typed = ''; const s = $('#qtext .slot'); if (s) s.textContent = '?'; }
+    if (timeout) q.t0 = now();
+    fx.wiggle = now();
+    $('#qtext').classList.add('shake'); setTimeout(() => $('#qtext').classList.remove('shake'), 300);
+    say(freeTry ? t('freeTry') : timeout ? t('potionTime') : t('tryAgain'));
+    if (isEnc && e.need > 1) renderPips();
+    save(); return;
+  }
+  // penalty
+  q.done = true;
+  R.hp--; fx.heroHurt = now(); fx.shake = now();
+  if (isEnc && (e.kind === 'monster' || e.kind === 'boss')) fx.encLunge = now(); else fx.wiggle = now();
+  hud(); save();
+  renderQ('reveal'); $('#answers').classList.add('off');
+  say(t('answerWas', q.p.answer, timeout));
+  if (q.ctx.kind === 'door') q.ctx.door.p = null;
+  if (R.hp <= 0) { later(gameOver, 1400); return; }
+  later(() => ask(q.ctx), 1700);
+}
+function renderPips() {
+  const e = R.room.enc, pips = $('#pips'); pips.replaceChildren();
+  for (let i = 0; i < e.need; i++) pips.appendChild(el('i', i < e.progress ? 'on' : ''));
+}
+
+/* ================= per-kid stats ================= */
+function stats(p) {
+  if (!p.stats) p.stats = { total: 0, ok: 0, ops: {}, missed: {}, runs: [], maxLv: clamp(Math.floor(p.rating), 1, 10) };
+  return p.stats;
+}
+function catOf(text) {
+  if ((text.match(/[+−×÷]/g) || []).length > 1 || text.includes('(')) return 'mix';
+  if (!text.endsWith('= ?')) return 'miss';
+  return text.includes('+') ? 'add' : text.includes('−') ? 'sub' : text.includes('×') ? 'mul' : 'div';
+}
+function record(q, ok, dt) {
+  const s = stats(P), c = catOf(q.p.text);
+  const o = s.ops[c] || (s.ops[c] = { n: 0, ok: 0, t: 0 });
+  o.n++; s.total++; R.n++;
+  if (ok) { o.ok++; o.t += Math.min(dt, 60); s.ok++; R.ok++; }
+  else {
+    const k = q.p.text.replace('?', q.p.answer);
+    s.missed[k] = (s.missed[k] || 0) + 1;
+    const keys = Object.keys(s.missed);
+    if (keys.length > 40) { keys.sort((a, b) => s.missed[a] - s.missed[b]); delete s.missed[keys[0]]; }
+  }
+}
+function endRun() {
+  if (!R || R.logged) return;
+  R.logged = true;
+  if (!R.n) return;
+  const s = stats(P);
+  s.runs.unshift({ d: Date.now(), rooms: R.depth, n: R.n, ok: R.ok });
+  s.runs = s.runs.slice(0, 10); save();
+}
+function renderStats() {
+  const s = stats(P), body = $('#statsBody'), loc = store.lang === 'fr' ? 'fr-FR' : 'en-GB';
+  $('#statsTitle').textContent = t('statsTitle', P.name);
+  body.replaceChildren();
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+  const sum = el('div', 'card sum');
+  for (const [v, k] of [[s.total, 'answered'], [s.total ? pct(s.ok, s.total) + (store.lang === 'fr' ? '\u202f%' : '%') : '–', 'firstTry'], [s.runs.length, 'runs'], [s.maxLv || level(), 'topLevel']]) {
+    const d = el('div'); d.append(el('b', null, String(v)), el('span', null, t(k))); sum.appendChild(d);
+  }
+  body.appendChild(sum);
+  if (!s.total) { body.appendChild(el('p', 'card muted', t('noStats'))); return; }
+  // by operation
+  const ops = el('div', 'card'); ops.appendChild(el('h3', null, t('byOp')));
+  const list = ['add', 'sub', 'mul', 'div', 'miss', 'mix'].filter(c => s.ops[c] && s.ops[c].n);
+  const scored = list.filter(c => s.ops[c].n >= 5).map(c => [c, s.ops[c].ok / s.ops[c].n]).sort((a, b) => a[1] - b[1]);
+  const weakest = scored.length && scored[0][1] < .7 ? scored[0][0] : null;
+  for (const c of list) {
+    const o = s.ops[c], p = pct(o.ok, o.n);
+    const row = el('div', 'op'), top = el('div', 'op-top');
+    top.appendChild(el('span', null, tt('ops', c)));
+    if (c === weakest) top.appendChild(el('span', 'flag', t('practise')));
+    top.appendChild(el('b', null, p + (store.lang === 'fr' ? '\u202f%' : '%')));
+    const bar = el('div', 'bar' + (p < 60 ? ' lowv' : p < 80 ? ' mid' : '')), fill = el('i'); fill.style.width = p + '%'; bar.appendChild(fill);
+    const avg = o.ok ? (o.t / o.ok).toLocaleString(loc, { maximumFractionDigits: 1 }) : null;
+    row.append(top, bar, el('small', null, t('opLine', o.n, avg)));
+    ops.appendChild(row);
+  }
+  body.appendChild(ops);
+  // trickiest
+  const tr = el('div', 'card'); tr.appendChild(el('h3', null, t('tricky')));
+  const missed = Object.entries(s.missed).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (!missed.length) tr.appendChild(el('p', 'muted', t('noMissed')));
+  for (const [k, n] of missed) { const r = el('div', 'miss'); r.append(el('span', null, k), el('small', null, t('missed', n))); tr.appendChild(r); }
+  body.appendChild(tr);
+  // recent runs
+  if (s.runs.length) {
+    const rr = el('div', 'card'); rr.appendChild(el('h3', null, t('recent')));
+    for (const r of s.runs) {
+      const l = el('div', 'runl');
+      l.append(el('span', 'muted', new Date(r.d).toLocaleDateString(loc, { day: 'numeric', month: 'short' })), el('span', null, t('runLine', r.rooms, pct(r.ok, r.n))));
+      rr.appendChild(l);
+    }
+    body.appendChild(rr);
+  }
+  const reset = btn(t('resetStats'), 'ghost', () => {
+    if (!reset.classList.contains('armed')) { reset.classList.add('armed'); reset.textContent = t('confirm'); setTimeout(() => { reset.classList.remove('armed'); reset.textContent = t('resetStats'); }, 2500); return; }
+    delete P.stats; stats(P); save(); renderStats();
+  });
+  body.appendChild(reset);
+}
+
+/* ================= end & menu ================= */
+function modal(nodes) { $('#modalCard').replaceChildren(...nodes); $('#modal').hidden = false; }
+function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.remove('info'); }
+function bank(g) { P.wallet += g; P.gold += g; save(); }
+const halfBag = () => Math.floor(R.gold / 2);
+function floorCleared() {
+  R.phase = 'floor'; P.bestFloor = Math.max(P.bestFloor || 0, R.floor); checkAchievements(); $('#qbox').hidden = true; setAnswers('', []); aside(null); say('');
+  modal([
+    el('h2', null, t('floorCleared', R.floor)),
+    el('p', null, t('bag', R.gold)),
+    el('p', null, t('stopOrMore')),
+    btn(t('goSame', runLevel()), '', () => { closeModal(); R.floor++; hud(); toast(t('floorSame', R.floor), 'flame'); showDoors(); }),
+    ...(runLevel() < 10 ? [btn(t('goHarder', runLevel() + 1), 'primary', () => { closeModal(); R.floor++; R.bonus++; hud(); toast(t('floorStart', R.floor), 'flame'); showDoors(); })] : []),
+    btn(t('goHome', R.gold), 'gold', () => {
+      closeModal(); const g = R.gold, r = R.depth; bank(g); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby');
+      modal([el('h2', null, t('homeTitle')), el('p', null, t('homeBody', r, g)), btn(t('ok'), 'primary', closeModal)]);
+    }),
+  ]);
+}
+function gameOver() {
+  const kept = halfBag(); bank(kept);
+  endRun(); R.over = true; R.phase = 'over'; save();
+  const im = el('img', 'px'); im.src = spriteURL(SPR.hero, heroPal(P.skin), 6); im.alt = ''; im.style.cssText = 'width:72px;height:72px;margin:0 auto';
+  modal([
+    im,
+    el('h2', null, t('napTitle')),
+    el('p', null, t('napBody', R.depth, R.solved, R.gold, kept)),
+    btn(t('playAgain'), 'primary', () => { closeModal(); startRun(); }),
+    btn(t('backHero'), '', () => { closeModal(); R = null; renderLobby(); show('scr-lobby'); }),
+  ]);
+}
+function pause() {
+  if (!R || R.over || !$('#modal').hidden) return;
+  paused = true; pausedAt = now();
+  modal([
+    el('h2', null, t('paused')),
+    btn(t('resume'), 'primary', resume),
+    btn(t('sound', store.sound), '', function () { store.sound = !store.sound; save(); this.textContent = t('sound', store.sound); }),
+    btn(t('leave', halfBag()), '', () => { closeModal(); paused = false; bank(halfBag()); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby'); }),
+  ]);
+}
+function resume() {
+  closeModal();
+  if (paused && R && R.q) R.q.t0 += now() - pausedAt;
+  paused = false;
+}
+$('#btnMenu').addEventListener('click', pause);
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+
+/* canvas taps on doors */
+cv.addEventListener('click', ev => {
+  if (!R || R.phase !== 'doors') return;
+  const rc = cv.getBoundingClientRect();
+  const x = (ev.clientX - rc.left) / rc.width * 128, y = (ev.clientY - rc.top) / rc.height * 128;
+  for (const d of R.room.doors) {
+    const r = DOOR[d.side];
+    if (x >= r.x - 8 && x <= r.x + r.w + 8 && y >= r.y - 8 && y <= r.y + r.h + 8) return doorTap(d);
+  }
+});
+/* keyboard support */
+document.addEventListener('keydown', ev => {
+  if (!R || !R.q || R.q.done || R.phase !== 'question' || paused) return;
+  const p = R.q.p;
+  if (p.mode === 'input') {
+    if (/^[0-9]$/.test(ev.key)) key(ev.key);
+    else if (ev.key === 'Backspace') key('⌫');
+    else if (ev.key === 'Enter') key('OK');
+  } else if (/^[1-4]$/.test(ev.key)) {
+    const bs = document.querySelectorAll('#answers .btn'); const b = bs[+ev.key - 1]; if (b) b.click();
+  }
+});
+
+/* ================= boot ================= */
+ICON.heart = spriteURL(SPR.heart, PAL.heart, 3);
+ICON.potion = spriteURL(SPR.potion, PAL.potion, 3);
+ICON.coin = spriteURL(SPR.coin, PAL.coin, 3);
+ICON.flame = spriteURL(SPR.flame, PAL.flame, 3);
+$('#icoPotion').src = ICON.potion; $('#icoCoin').src = ICON.coin; $('#icoFlame').src = ICON.flame;
+load();
+applyLang();
+renderTitle();
+</script>
+</body>
+</html>
