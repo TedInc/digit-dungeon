@@ -147,7 +147,7 @@ h3{margin:0 0 8px;font-size:18px}
 .hud img{width:18px;height:18px}
 .hud .hearts{display:flex;gap:2px}
 .hud .menu{min-height:36px;padding:2px 10px;font-size:16px}
-.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.stage{flex:none;display:flex;align-items:flex-start;justify-content:center}
 .cw{position:relative;border:3px solid var(--edge);border-radius:6px;box-shadow:0 4px 0 var(--shadow);overflow:hidden;background:#1d1630}
 .cw canvas{width:100%;height:100%;display:block;touch-action:manipulation}
 #toasts{position:absolute;left:0;right:0;top:8px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
@@ -159,30 +159,34 @@ h3{margin:0 0 8px;font-size:18px}
 @keyframes pop{0%{transform:scale(.6);opacity:0}10%{transform:scale(1.06);opacity:1}18%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-8px)}}
 @media (prefers-reduced-motion: reduce){.toast{animation:fade 1.9s linear forwards}@keyframes fade{0%,80%{opacity:1}100%{opacity:0}}}
 
-.panel{display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
-.msgrow{display:flex;align-items:center;gap:8px;min-height:40px}
-.msg{flex:1;margin:0;font-size:17px;line-height:1.2}
-.qbox{background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px 10px 8px;text-align:center;box-shadow:0 4px 0 var(--shadow)}
-.qtext{font-size:42px;font-weight:600;line-height:1.15;white-space:nowrap}
+.panel{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding-bottom:4px}
+/* fixed slots: message, question, answers. Hidden parts keep their space so nothing jumps */
+#qbox[hidden],#timer[hidden]{display:block!important;visibility:hidden}
+.msgrow{display:flex;align-items:center;gap:8px;height:44px;flex:none}
+.msg{flex:1;margin:0;font-size:17px;line-height:1.2;max-height:2.4em;overflow:hidden}
+.qbox{flex:none;background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px 10px 8px;text-align:center;box-shadow:0 4px 0 var(--shadow)}
+.qtext{font-size:42px;font-weight:600;height:50px;line-height:50px;white-space:nowrap}
 .qtext.long{font-size:32px}
 .qtext .slot{display:inline-block;min-width:1.2ch;color:var(--sky);border-bottom:4px solid currentColor;line-height:1}
 .qtext.reveal .slot{color:var(--mint)}
 .qtext.good .slot{color:var(--mint)}
-.pips{display:flex;justify-content:center;gap:6px;margin-bottom:2px}
+.pips{display:flex;justify-content:center;gap:6px;height:14px;margin-bottom:2px}
 .pips i{width:14px;height:14px;border:3px solid var(--edge);border-radius:3px;background:transparent}
 .pips i.on{background:var(--coral)}
 .timer{height:10px;border:3px solid var(--edge);border-radius:6px;overflow:hidden;margin-top:4px;background:var(--bg)}
 .timer i{display:block;height:100%;width:100%;background:var(--gold)}
 .timer.low i{background:var(--coral)}
-.answers{display:grid;gap:8px}
-.answers.choices{grid-template-columns:1fr 1fr}
-.answers.choices .btn{font-size:34px;font-weight:600;min-height:64px}
+.answers{flex:1;min-height:0;display:grid;gap:8px;align-content:end}
+.answers.choices{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(56px,88px)}
+.answers.choices .btn{font-size:34px;font-weight:600;min-height:0}
 .answers.choices.n3 .btn:last-child{grid-column:1 / -1}
-.answers.keypad{grid-template-columns:repeat(3,1fr)}
-.answers.keypad .btn{font-size:28px;font-weight:500;min-height:46px;padding:4px}
+.answers.keypad{grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(38px,64px)}
+.answers.keypad .btn{font-size:28px;font-weight:500;min-height:0;padding:4px}
 .answers.doors{grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
-.answers.doors .btn{font-size:18px;min-height:60px}
+.answers.doors{grid-auto-rows:minmax(56px,88px)}
+.answers.doors .btn{font-size:18px;min-height:0}
 .answers.off{pointer-events:none}
+.answers.coach-wrap{align-content:space-between}
 .coach{display:flex;gap:10px;align-items:flex-start}
 .coach img{width:44px;height:44px;flex:none}
 .coach p{margin:0;font-size:18px;line-height:1.3}
@@ -1083,14 +1087,19 @@ function render(t) {
   else if (fx.fadeIn) { a = 1 - clamp((t - fx.fadeIn) / 300, 0, 1); if (a <= 0) fx.fadeIn = 0; }
   if (a > 0) { cx.fillStyle = `rgba(29,22,48,${a})`; cx.fillRect(0, 0, 128, 128); }
 }
+// The board size depends only on the screen, never on what the panel shows, so nothing jumps between rooms.
+// PANEL_MIN fits message + question + 4 keypad rows at their smallest.
+const PANEL_MIN = 330;
 function fit() {
-  // leave room for the 4px drop shadow under the board
-  const st = $('#stage'); const s = Math.floor(Math.min(st.clientWidth, st.clientHeight - 4));
-  if (s > 0) { $('#cw').style.width = s + 'px'; $('#cw').style.height = s + 'px'; }
+  const g = $('#scr-game'), st = $('#stage');
+  if (g.hidden) return;
+  const gap = parseFloat(getComputedStyle(g).rowGap) || 0;
+  const free = g.clientHeight - $('.hud').offsetHeight - 2 * gap - PANEL_MIN - 4; // 4px board shadow
+  const s = Math.floor(Math.min(st.clientWidth, Math.max(free, 96)));
+  $('#cw').style.width = s + 'px'; $('#cw').style.height = s + 'px'; st.style.height = (s + 4) + 'px';
 }
 addEventListener('resize', fit);
-// the panel under the board grows and shrinks (question, keypad, doors): refit whenever the stage changes
-if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
+if (window.ResizeObserver) new ResizeObserver(fit).observe($('#scr-game'));
 
 /* ================= game loop & timer ================= */
 let paused = false, pausedAt = 0;
@@ -1180,7 +1189,7 @@ function showCoach() {
   const im = el('img', 'px'); im.src = spriteURL(SPR.owl, PAL.owl, 3); im.alt = '';
   const p = el('p'); p.appendChild(el('b', null, t('hootSays'))); p.appendChild(document.createTextNode(tipText(R.room.enc.tip)));
   box.append(im, p);
-  setAnswers('', [box, btn(t('thanks'), 'primary', () => { sfx('tap'); showDoors(); })]);
+  setAnswers('coach-wrap', [box, btn(t('thanks'), 'primary', () => { sfx('tap'); showDoors(); })]);
 }
 function showDoors() {
   R.phase = 'doors'; R.q = null; $('#qbox').hidden = true; aside(null);
