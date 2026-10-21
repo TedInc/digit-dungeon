@@ -19,8 +19,6 @@
   --read:"Fredoka",ui-rounded,"Avenir Next","Trebuchet MS",system-ui,sans-serif;
   color-scheme:light;
   box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -37,13 +35,16 @@
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
 body{
-  height:100%;margin:0;background:var(--bg);color:var(--ink);
+  position:fixed;inset:0;margin:0;background:var(--bg);color:var(--ink);
   font-family:var(--read);
   -webkit-user-select:none;user-select:none;touch-action:manipulation;
   overflow:hidden;-webkit-tap-highlight-color:transparent;
 }
 [hidden]{display:none!important}
-#app{height:100%;max-width:480px;margin:0 auto;padding:8px 12px;display:flex;flex-direction:column}
+#app{
+  height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;
+  padding:calc(8px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));
+}
 .screen{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
 img.px,canvas{image-rendering:pixelated;image-rendering:crisp-edges}
 
@@ -96,7 +97,14 @@ input[type=text]{
 .row{display:flex;gap:8px}.row>*{flex:1}
 
 /* lobby */
-#scr-lobby{overflow-y:auto;padding-bottom:12px}
+#scr-lobby{gap:8px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;min-height:58px;font-size:13px;box-shadow:0 3px 0 var(--shadow)}
+.tab img{width:24px;height:24px}
+.tab .dots{height:24px;font-size:22px;line-height:24px;letter-spacing:1px}
+.tab.on{background:var(--gold);color:#2b2240}
+.panes{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 0 10px}
+.pane{display:flex;flex-direction:column;gap:10px}
 .lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px}
 #lobbyHero{width:96px;height:96px;background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px}
 .lobby-top h2{margin:0;font-size:30px}
@@ -250,37 +258,51 @@ h3{margin:0 0 8px;font-size:18px}
       </div>
     </div>
     <button id="btnPlay" class="btn primary" style="font-size:22px;min-height:60px" data-i18n="enter"></button>
-    <div class="card stats">
-      <div><b id="stRoom">0</b><span data-i18n="bestRoom"></span></div>
-      <div><b id="stStreak">0</b><span data-i18n="bestStreak"></span></div>
-      <div><b id="stGold">0</b><span data-i18n="goldFound"></span></div>
+    <div class="tabs" id="lobbyTabs" role="tablist">
+      <button class="btn tab" role="tab" data-tab="skin"><img id="tabSkin" class="px" alt=""><span data-i18n="tabSkins"></span></button>
+      <button class="btn tab" role="tab" data-tab="pet"><img id="tabPet" class="px" alt=""><span data-i18n="pets"></span></button>
+      <button class="btn tab" role="tab" data-tab="boost"><img id="tabBoost" class="px" alt=""><span data-i18n="tabBoosts"></span></button>
+      <button class="btn tab" role="tab" data-tab="more"><span class="dots" aria-hidden="true">•••</span><span data-i18n="tabMore"></span></button>
     </div>
-    <div class="card">
-      <h3 data-i18n="wardrobe"></h3>
-      <div id="wardrobe" class="wardrobe"></div>
-      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="wardNote"></p>
-    </div>
-    <div class="card">
-      <h3 data-i18n="pets"></h3>
-      <div id="petShop" class="wardrobe"></div>
-      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="petNote"></p>
-    </div>
-    <div class="card">
-      <h3 data-i18n="boosts"></h3>
-      <div id="boosts" class="boosts"></div>
-      <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="boostNote"></p>
-    </div>
-    <div class="card">
-      <h3 data-i18n="lvTitle"></h3>
-      <div class="stepper">
-        <button id="lvDown" class="btn" aria-label="Easier">−</button>
-        <b id="lvVal" style="font-family:var(--read)">1</b>
-        <button id="lvUp" class="btn" aria-label="Harder">+</button>
-        <span id="lvDesc" style="font-size:14px;color:var(--ink-soft);flex:1"></span>
+    <div class="panes" id="panes">
+      <div class="pane" data-pane="skin" role="tabpanel">
+        <div class="card">
+          <div id="wardrobe" class="wardrobe"></div>
+          <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="wardNote"></p>
+        </div>
+      </div>
+      <div class="pane" data-pane="pet" role="tabpanel" hidden>
+        <div class="card">
+          <div id="petShop" class="wardrobe"></div>
+          <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="petNote"></p>
+        </div>
+      </div>
+      <div class="pane" data-pane="boost" role="tabpanel" hidden>
+        <div class="card">
+          <h3 data-i18n="boosts"></h3>
+          <div id="boosts" class="boosts"></div>
+          <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="boostNote"></p>
+        </div>
+      </div>
+      <div class="pane" data-pane="more" role="tabpanel" hidden>
+        <div class="card stats">
+          <div><b id="stRoom">0</b><span data-i18n="bestRoom"></span></div>
+          <div><b id="stStreak">0</b><span data-i18n="bestStreak"></span></div>
+          <div><b id="stGold">0</b><span data-i18n="goldFound"></span></div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="lvTitle"></h3>
+          <div class="stepper">
+            <button id="lvDown" class="btn" aria-label="Easier">−</button>
+            <b id="lvVal" style="font-family:var(--read)">1</b>
+            <button id="lvUp" class="btn" aria-label="Harder">+</button>
+            <span id="lvDesc" style="font-size:14px;color:var(--ink-soft);flex:1"></span>
+          </div>
+        </div>
+        <button id="btnStats" class="btn" data-i18n="statsBtn"></button>
+        <button id="btnSwitch" class="btn ghost" data-i18n="switchHero"></button>
       </div>
     </div>
-    <button id="btnStats" class="btn" data-i18n="statsBtn"></button>
-    <button id="btnSwitch" class="btn ghost" data-i18n="switchHero"></button>
   </section>
 
   <!-- Stats -->
@@ -345,7 +367,7 @@ const I18N = {
     s3: 'Math whiz', s3d: 'Times tables and dividing, ages 9+', cancel: 'Cancel', create: 'Create hero',
     del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
     enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', goldFound: 'Gold found',
-    wardrobe: 'Wardrobe', wardNote: 'Buy outfits with gold. Special ones are won with achievements: tap one to see how.', locked: 'Locked',
+    wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabBoosts: 'Boosts', tabMore: 'More', wardNote: 'Buy outfits with gold. Special ones are won with achievements: tap one to see how.', locked: 'Locked',
     walletLbl: 'gold to spend', pets: 'Pets', petNote: 'A pet follows you in the dungeon. Some are bought, some are won: tap one to see how.', noPet: 'No pet',
     petNames: ['Chick', 'Cat', 'Puppy', 'Bunny', 'Frog', 'Ghost', 'Baby dragon', 'Owlet', 'Turtle', 'Fox', 'Penguin', 'Blue slime', 'Unicorn'],
     boosts: 'Boosts for the next run', boostNote: 'Bought boosts are used when you enter the dungeon. Tap again to get your gold back.',
@@ -397,7 +419,7 @@ const I18N = {
     s3: 'As du calcul', s3d: 'Tables et divisions, 9 ans et plus', cancel: 'Annuler', create: 'Créer',
     del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
     enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', goldFound: 'Or trouvé',
-    wardrobe: 'Garde-robe', wardNote: 'Achète des tenues avec ton or. Les tenues spéciales se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
+    wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabBoosts: 'Bonus', tabMore: 'Plus', wardNote: 'Achète des tenues avec ton or. Les tenues spéciales se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
     walletLbl: 'or à dépenser', pets: 'Compagnons', petNote: 'Un compagnon te suit dans le donjon. Certains s’achètent, d’autres se gagnent : touche-en un pour savoir comment.', noPet: 'Aucun',
     petNames: ['Poussin', 'Chaton', 'Chiot', 'Lapin', 'Grenouille', 'Fantôme', 'Bébé dragon', 'Chouette', 'Tortue', 'Renarde', 'Pingouin', 'Gelée bleue', 'Licorne'],
     boosts: 'Bonus pour la prochaine partie', boostNote: 'Les bonus achetés s’activent à l’entrée du donjon. Touche encore pour récupérer ton or.',
@@ -912,7 +934,19 @@ function renderLobby() {
   const lp = $('#lobbyPet');
   if (P.pet >= 0) { lp.src = spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 5); lp.hidden = false; } else lp.hidden = true;
   renderShop('skin'); renderShop('pet'); renderBoosts();
+  $('#tabSkin').src = spriteURL(SPR.hero, heroPal(P.skin), 3);
+  $('#tabPet').src = P.pet >= 0 ? spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 3) : spriteURL(PETS[0].spr, PETS[0].pal, 3);
+  $('#tabBoost').src = ICON.potion;
+  setTab(lobbyTab);
 }
+let lobbyTab = 'skin';
+function setTab(k) {
+  if (k !== lobbyTab) $('#panes').scrollTop = 0;
+  lobbyTab = k;
+  document.querySelectorAll('#lobbyTabs .tab').forEach(b => { b.classList.toggle('on', b.dataset.tab === k); b.setAttribute('aria-selected', b.dataset.tab === k); });
+  document.querySelectorAll('#panes .pane').forEach(p => { p.hidden = p.dataset.pane !== k; });
+}
+document.querySelectorAll('#lobbyTabs .tab').forEach(b => b.addEventListener('click', () => { sfx('tap'); setTab(b.dataset.tab); }));
 $('#lvDown').addEventListener('click', () => { P.rating = clamp(level() - 1, 1, 10); save(); renderLobby(); });
 $('#lvUp').addEventListener('click', () => { P.rating = clamp(level() + 1, 1, 10); save(); renderLobby(); });
 $('#btnStats').addEventListener('click', () => { renderStats(); show('scr-stats'); });
@@ -1050,10 +1084,13 @@ function render(t) {
   if (a > 0) { cx.fillStyle = `rgba(29,22,48,${a})`; cx.fillRect(0, 0, 128, 128); }
 }
 function fit() {
-  const st = $('#stage'); const s = Math.floor(Math.min(st.clientWidth, st.clientHeight));
+  // leave room for the 4px drop shadow under the board
+  const st = $('#stage'); const s = Math.floor(Math.min(st.clientWidth, st.clientHeight - 4));
   if (s > 0) { $('#cw').style.width = s + 'px'; $('#cw').style.height = s + 'px'; }
 }
 addEventListener('resize', fit);
+// the panel under the board grows and shrinks (question, keypad, doors): refit whenever the stage changes
+if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
 
 /* ================= game loop & timer ================= */
 let paused = false, pausedAt = 0;
