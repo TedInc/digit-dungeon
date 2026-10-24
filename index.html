@@ -377,7 +377,7 @@ const I18N = {
     boosts: 'Boosts for the next run', boostNote: 'Bought boosts are used when you enter the dungeon. Tap again to get your gold back.',
     boostHeart: '+1 heart', boostPotion: '+1 potion', boostOn: 'Ready! Tap to undo', potionMax: n => `Max ${n} potion at this level`,
     buy: p => `Buy for ${p} gold`, needMore: n => `You need ${n} more gold.`, special: 'Special', close: 'Close',
-    req: (k, n, o) => ({ clear: `Beat the dragon at level ${o} for the first time.`, streak: `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
+    req: (k, n, o, m) => ({ clear: `Beat the dragon at level ${o} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row at level ${m} or higher.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
     progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
     lvTitle: 'Puzzle level (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
     level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`, dragonNear: 'The dragon waits behind the next door!',
@@ -429,7 +429,7 @@ const I18N = {
     boosts: 'Bonus pour la prochaine partie', boostNote: 'Les bonus achetés s’activent à l’entrée du donjon. Touche encore pour récupérer ton or.',
     boostHeart: '+1 cœur', boostPotion: '+1 potion', boostOn: 'Prêt ! Touche pour annuler', potionMax: n => `Max ${n} potion à ce niveau`,
     buy: p => `Acheter pour ${p} or`, needMore: n => `Il te manque ${n} or.`, special: 'Spécial', close: 'Fermer',
-    req: (k, n, o) => ({ clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
+    req: (k, n, o, m) => ({ clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée au niveau ${m} ou plus.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
     progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
     lvTitle: 'Niveau des calculs (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
     level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`, dragonNear: 'La dragonne attend derrière la prochaine porte !',
@@ -619,7 +619,7 @@ const SKINS = [
   { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', cost: 40 },
   { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', req: ['clear', 1, 3] },
   { H: '#e8892b', B: '#b5562b', L: '#5a3a22', req: ['streak', 10] },
-  { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 30] },
+  { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 20, null, 7] },
   { H: '#2b2240', B: '#46466e', L: '#2b2240', cost: 80 },
   { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['clear', 1, 7] },
   { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['clear', 1, 5] },
@@ -637,13 +637,15 @@ const PETS = [
   { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['solved', 150] },
   { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['room', 15] },
   { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['dragons', 5] },
-  { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15] },
+  { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15, null, 4] },
   { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, req: ['clear', 1, 6] },
   { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, cost: 120 },
   { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 50, 'sub'] },
   { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['clear', 1, 8] },
   { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['clear', 1, 10] },
 ];
+// minimum levels used by streak rewards (a streak only counts answers given at that level or above)
+const STREAK_LEVELS = [...new Set([...SKINS, ...PETS].filter(x => x.req && x.req[0] === 'streak' && x.req[3] > 1).map(x => x.req[3]))];
 const BOOSTS = { heart: 20, potion: 12 };
 const heroPal = i => { const s = SKINS[i] || SKINS[0]; return { H: s.H, B: s.B, L: s.L, S: '#ffd2a6', E: '#2b2240', Y: '#ffc83d', K: '#4a3020' }; };
 const MONSTERS = {
@@ -834,17 +836,18 @@ function migrate(p) {
   if (p.maxLv == null) p.maxLv = clamp(Math.floor(p.rating), 1, 10);
   if (p.bestFloor == null) p.bestFloor = 0;
   if (!Array.isArray(p.clears)) p.clears = [];
+  if (!p.bestAt) p.bestAt = {};
   p.rating = clamp(Math.floor(p.rating), 1, 10);
   return p;
 }
-const progressOf = (k, o) => k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
+const progressOf = (k, o, m) => k === 'streak' && m > 1 ? (P.bestAt[m] || 0) : k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
 const greyPal = pal => Object.fromEntries(Object.keys(pal).map(k => [k, '#6a5a86']));
 function checkAchievements() {
   SKINS.forEach((s, i) => {
-    if (s.req && !P.unlocked.includes(i) && progressOf(s.req[0], s.req[2]) >= s.req[1]) { P.unlocked.push(i); toast(t('newOutfit', t('skins')[i]), 'flame'); sfx('win'); }
+    if (s.req && !P.unlocked.includes(i) && progressOf(s.req[0], s.req[2], s.req[3]) >= s.req[1]) { P.unlocked.push(i); toast(t('newOutfit', t('skins')[i]), 'flame'); sfx('win'); }
   });
   PETS.forEach((p, i) => {
-    if (p.req && !P.pets.includes(i) && progressOf(p.req[0], p.req[2]) >= p.req[1]) { P.pets.push(i); toast(t('newPet', t('petNames')[i]), 'flame'); sfx('win'); }
+    if (p.req && !P.pets.includes(i) && progressOf(p.req[0], p.req[2], p.req[3]) >= p.req[1]) { P.pets.push(i); toast(t('newPet', t('petNames')[i]), 'flame'); sfx('win'); }
   });
   save();
 }
@@ -893,8 +896,8 @@ function openInfo(kind, i) {
     if (P.wallet < it.cost) { buy.disabled = true; nodes.push(el('p', 'req', t('needMore', it.cost - P.wallet))); }
     nodes.push(buy);
   } else {
-    const [k, n, o] = it.req, c = Math.min(progressOf(k, o), n);
-    nodes.push(el('p', 'req', t('req', k, n, o)));
+    const [k, n, o, m] = it.req, c = Math.min(progressOf(k, o, m), n);
+    nodes.push(el('p', 'req', t('req', k, n, o, m)));
     if (k !== 'clear') {
       const bar = el('div', 'prog'), fill = el('i'); fill.style.width = Math.round(c / n * 100) + '%'; bar.appendChild(fill);
       nodes.push(bar, el('p', null, t('progress', c, n)));
@@ -1142,7 +1145,7 @@ function later(fn, ms) { const run = R; setTimeout(() => { if (R === run && !run
 
 function startRun() {
   migrate(P);
-  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, streak: 0, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
+  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, streak: 0, streakAt: {}, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
   P.boosts = { heart: false, potion: false }; seenLevel(); save();
   pet.x = 46; pet.y = 140;
   show('scr-game'); fit(); nextRoom();
@@ -1267,6 +1270,7 @@ function right(dt) {
   if (!(q.ctx.kind === 'enc' && R.room.type === 'boss') && !R.bossNext && ++R.toBoss >= bossAfter(runLevel())) { R.bossNext = true; later(() => toast(t('dragonNear'), 'dragon'), 700); }
   { const c = catOf(q.p.text); P.opOk[c] = (P.opOk[c] || 0) + 1; }
   if (R.streak > P.bestStreak) P.bestStreak = R.streak;
+  for (const m of STREAK_LEVELS) { R.streakAt[m] = runLevel() >= m ? (R.streakAt[m] || 0) + 1 : 0; P.bestAt[m] = Math.max(P.bestAt[m] || 0, R.streakAt[m]); }
   if (dt < 2 && !q.wrongs && q.ctx.kind !== 'door') { if (R.potions < potionCap()) { R.potions++; toast(t('fast'), 'potion'); } }
   if (R.streak >= 5 && R.streak % 5 === 0) toast(t('streak', R.streak), 'flame');
   checkAchievements();
@@ -1319,7 +1323,7 @@ function wrong(b, timeout) {
   const q = R.q; if (!q || q.done) return;
   if (!q.wrongs) record(q, false, 0);
   // any mistake restarts the streak, so the dragon comes later
-  R.streak = 0; R.toBoss = 0; R.bossNext = false; sfx('bad');
+  R.streak = 0; R.streakAt = {}; R.toBoss = 0; R.bossNext = false; sfx('bad');
   const e = R.room.enc, isEnc = q.ctx.kind === 'enc';
   const freeTry = false; // potions are the only free tries against monsters, bosses and chests
   const isDoor = q.ctx.kind === 'door';
