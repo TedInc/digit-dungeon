@@ -103,6 +103,17 @@ input[type=text]{
 .tab img{width:24px;height:24px}
 .tab .dots{height:24px;font-size:22px;line-height:24px;letter-spacing:1px}
 .tab.on{background:var(--gold);color:#2b2240}
+/* items won in the last game: glowing border and a star until tapped */
+.tab,.skin{position:relative}
+.tab.new,.skin.new{border-color:var(--gold);animation:glow 1.2s ease-in-out infinite alternate}
+.tab.new::after,.skin.new::after{
+  content:"★";position:absolute;top:-9px;right:-7px;width:22px;height:22px;display:grid;place-items:center;
+  font-size:14px;line-height:1;color:#2b2240;background:var(--gold);border:2px solid var(--edge);border-radius:50%;
+}
+.skin.new img{animation:bob .9s ease-in-out infinite alternate}
+@keyframes glow{from{box-shadow:0 4px 0 var(--shadow),0 0 0 2px var(--gold)}to{box-shadow:0 4px 0 var(--shadow),0 0 12px 4px var(--gold)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3px)}}
+@media (prefers-reduced-motion: reduce){.tab.new,.skin.new{animation:none;box-shadow:0 4px 0 var(--shadow),0 0 0 3px var(--gold)}.skin.new img{animation:none}}
 .panes{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 0 10px}
 .pane{display:flex;flex-direction:column;gap:10px}
 .lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px}
@@ -845,6 +856,7 @@ function migrate(p) {
   if (p.bestFloor == null) p.bestFloor = 0;
   if (!Array.isArray(p.clears)) p.clears = [];
   if (!p.bestAt) p.bestAt = {};
+  if (!p.fresh) p.fresh = { skin: [], pet: [] };
   p.rating = clamp(Math.floor(p.rating), 1, 10);
   return p;
 }
@@ -852,10 +864,10 @@ const progressOf = (k, o, m) => k === 'streak' && m > 1 ? (P.bestAt[m] || 0) : k
 const greyPal = pal => Object.fromEntries(Object.keys(pal).map(k => [k, '#6a5a86']));
 function checkAchievements() {
   SKINS.forEach((s, i) => {
-    if (s.req && !P.unlocked.includes(i) && progressOf(s.req[0], s.req[2], s.req[3]) >= s.req[1]) { P.unlocked.push(i); toast(t('newOutfit', t('skins')[i]), 'flame'); sfx('win'); }
+    if (s.req && !P.unlocked.includes(i) && progressOf(s.req[0], s.req[2], s.req[3]) >= s.req[1]) { P.unlocked.push(i); P.fresh.skin.push(i); toast(t('newOutfit', t('skins')[i]), 'flame'); sfx('win'); }
   });
   PETS.forEach((p, i) => {
-    if (p.req && !P.pets.includes(i) && progressOf(p.req[0], p.req[2], p.req[3]) >= p.req[1]) { P.pets.push(i); toast(t('newPet', t('petNames')[i]), 'flame'); sfx('win'); }
+    if (p.req && !P.pets.includes(i) && progressOf(p.req[0], p.req[2], p.req[3]) >= p.req[1]) { P.pets.push(i); P.fresh.pet.push(i); toast(t('newPet', t('petNames')[i]), 'flame'); sfx('win'); }
   });
   save();
 }
@@ -878,8 +890,8 @@ function renderShop(kind) {
   }
   list.forEach((it, i) => {
     const owned = owns(i);
-    const b = btn('', 'skin' + (cur === i ? ' on' : '') + (owned ? '' : it.cost ? ' buy' : ' locked'), () => {
-      if (owned) { if (kind === 'skin') P.skin = i; else P.pet = i; save(); sfx('tap'); renderLobby(); }
+    const b = btn('', 'skin' + (cur === i ? ' on' : '') + (owned ? (P.fresh[kind].includes(i) ? ' new' : '') : it.cost ? ' buy' : ' locked'), () => {
+      if (owned) { if (kind === 'skin') P.skin = i; else P.pet = i; P.fresh[kind] = P.fresh[kind].filter(x => x !== i); save(); sfx('tap'); renderLobby(); }
       else openInfo(kind, i);
     });
     b.appendChild(itemImg(kind, i, owned, kind === 'skin' ? 3 : 4));
@@ -951,6 +963,7 @@ function renderLobby() {
   $('#tabSkin').src = spriteURL(SPR.hero, heroPal(P.skin), 3);
   $('#tabPet').src = P.pet >= 0 ? spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 3) : spriteURL(PETS[0].spr, PETS[0].pal, 3);
   $('#tabBoost').src = ICON.potion;
+  for (const k of ['skin', 'pet']) $(`#lobbyTabs [data-tab=${k}]`).classList.toggle('new', P.fresh[k].length > 0);
   setTab(lobbyTab);
 }
 let lobbyTab = 'skin';
@@ -1154,7 +1167,7 @@ function later(fn, ms) { const run = R; setTimeout(() => { if (R === run && !run
 function startRun() {
   migrate(P);
   R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, streak: 0, streakAt: {}, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
-  P.boosts = { heart: false, potion: false }; seenLevel(); save();
+  P.boosts = { heart: false, potion: false }; P.fresh = { skin: [], pet: [] }; seenLevel(); save();
   pet.x = 46; pet.y = 140;
   show('scr-game'); fit(); nextRoom();
 }
