@@ -809,7 +809,15 @@ function openNew() {
   document.querySelectorAll('#startSeg .btn').forEach(b => b.classList.toggle('on', b.dataset.r === '1'));
 }
 $('#btnNew').addEventListener('click', openNew);
-document.querySelectorAll('#langSeg .btn').forEach(b => b.addEventListener('click', () => { store.lang = b.dataset.lang; save(); applyLang(); renderTitle(); }));
+document.querySelectorAll('#langSeg .btn').forEach(b => b.addEventListener('click', () => {
+  // keep a hero being created: name and start level survive the switch
+  const open = !$('#newForm').hidden, name = $('#nameIn').value, r = startRating;
+  store.lang = b.dataset.lang; save(); applyLang(); renderTitle();
+  if (open) {
+    openNew(); $('#nameIn').value = name; startRating = r;
+    document.querySelectorAll('#startSeg .btn').forEach(x => x.classList.toggle('on', +x.dataset.r === r));
+  }
+}));
 $('#btnCancel').addEventListener('click', () => { if (store.profiles.length) { $('#btnNew').hidden = false; $('#newForm').hidden = true; } });
 document.querySelectorAll('#startSeg .btn').forEach(b => b.addEventListener('click', () => {
   startRating = +b.dataset.r;
