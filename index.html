@@ -108,8 +108,6 @@ input[type=text]{
 .lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px}
 #lobbyHero{width:96px;height:96px;background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px}
 .lobby-top h2{margin:0;font-size:30px}
-.lvl-bar{height:12px;border:3px solid var(--edge);border-radius:6px;background:var(--bg);overflow:hidden;margin-top:6px;width:160px}
-.lvl-bar i{display:block;height:100%;background:var(--mint)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .stats b{display:block;font-size:24px}
 .stats span{font-size:13px;color:var(--ink-soft)}
@@ -145,6 +143,8 @@ h3{margin:0 0 8px;font-size:18px}
 .hud .grp{display:flex;align-items:center;gap:10px}
 .hud .it{display:flex;align-items:center;gap:3px}
 .hud img{width:18px;height:18px}
+.hud .dragon img{width:22px;height:22px}
+.hud .dragon.ready{color:var(--coral)}
 .hud .hearts{display:flex;gap:2px}
 .hud .menu{min-height:36px;padding:2px 10px;font-size:16px}
 .stage{flex:none;display:flex;align-items:flex-start;justify-content:center}
@@ -257,7 +257,7 @@ h3{margin:0 0 8px;font-size:18px}
       <div>
         <h2 id="lobbyName"></h2>
         <div id="lobbyLvl"></div>
-        <div class="lvl-bar"><i id="lobbyBar"></i></div>
+        <div id="lobbyLvlDesc" class="muted"></div>
         <div class="wallet"><img id="walletIco" class="px" alt=""><b id="wallet">0</b><span data-i18n="walletLbl"></span></div>
       </div>
     </div>
@@ -325,7 +325,7 @@ h3{margin:0 0 8px;font-size:18px}
       </div>
       <div class="grp">
         <div class="it"><img class="px" id="icoFlame" alt="Streak"><span id="hudStreak">0</span></div>
-        <span id="hudRoom"></span>
+        <span id="hudRoom" class="it dragon"></span>
         <button class="btn menu" id="btnMenu" aria-label="Pause">II</button>
       </div>
     </div>
@@ -367,8 +367,8 @@ const I18N = {
   en: {
     tag: 'Solve sums. Open doors. Find treasure.', newHero: 'New hero', heroName: 'Hero name', nameNeeded: 'Type a name first',
     whereStart: 'Where should the puzzles start?',
-    s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Bigger sums and easy times tables, ages 7–8',
-    s3: 'Math whiz', s3d: 'Times tables and dividing, ages 9+', cancel: 'Cancel', create: 'Create hero',
+    s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Adding is easy, now taking away, ages 6–7',
+    s3: 'Math whiz', s3d: 'Times tables, ages 8+', cancel: 'Cancel', create: 'Create hero',
     del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
     enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', goldFound: 'Gold found',
     wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabBoosts: 'Boosts', tabMore: 'More', wardNote: 'Buy outfits with gold. Special ones are won with achievements: tap one to see how.', locked: 'Locked',
@@ -377,11 +377,12 @@ const I18N = {
     boosts: 'Boosts for the next run', boostNote: 'Bought boosts are used when you enter the dungeon. Tap again to get your gold back.',
     boostHeart: '+1 heart', boostPotion: '+1 potion', boostOn: 'Ready! Tap to undo', potionMax: n => `Max ${n} potion at this level`,
     buy: p => `Buy for ${p} gold`, needMore: n => `You need ${n} more gold.`, special: 'Special', close: 'Close',
-    req: (k, n, o) => ({ streak: `Get ${n} right answers in a row.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
+    req: (k, n, o) => ({ clear: `Beat the dragon at level ${o} for the first time.`, streak: `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
     progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
     lvTitle: 'Puzzle level (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
-    level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`,
-    lvDesc: ['Adding up to 10, two choices', 'Adding and taking away to 10', 'Up to 20, missing numbers', 'Up to 50, ×2 ×5 ×10, with a timer', 'All times tables, with a timer', 'Type the answer, up to 100', 'Dividing and missing factors', 'Big numbers, 2-digit times', 'Times before plus, brackets', 'Champion mix'],
+    level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`, dragonNear: 'The dragon waits behind the next door!',
+    cleared: n => `Level ${n} cleared!`,
+    lvDesc: ['Adding, up to 10', 'Adding, totals 8 to 15', 'Adding, totals 10 to 20', 'Taking away, within 10', 'Times, up to 5 × 5', 'Times, up to 5 × 10', 'Times tables, up to 10 × 10', 'Dividing by 2 to 5', 'Dividing by 2 to 10', 'Champion mix: + − × ÷'],
     skins: ['Knight', 'Ranger', 'Wizard', 'Pirate', 'Dwarf', 'Star hero', 'Ninja', 'Royal', 'Robot', 'Viking', 'Astronaut', 'Fairy', 'Ice mage', 'Champion'],
     mon: { slime: 'A wobbly slime', bat: 'A sleepy bat', goblin: 'A grumpy goblin' },
     monIntro: n => `${n} blocks the way! Solve it to zap it.`,
@@ -391,7 +392,6 @@ const I18N = {
     doorsLocked: 'The doors are locked. Tap one to try its lock.', doorsOpen: 'Which way now? Tap a door.',
     doors: { left: 'Left', top: 'Middle', right: 'Right' }, lockAsks: 'This lock asks:', otherDoor: 'Other door', leaveIt: 'Leave it',
     fast: 'Super fast! +1 free-try potion', streakSkin: (n, k) => `${n} in a row! New outfit: ${k}`, streak: n => `${n} in a row!`,
-    levelUp: n => `Level ${n}! Trickier puzzles ahead`, levelDown: n => `Level ${n}: let’s practise a bit`,
     praise: ['Correct!', 'Nice one!', 'You got it!', 'Brilliant!'],
     dragonBeaten: g => `Dragon beaten! +${g} gold, +1 heart`, gold: g => `+${g} gold`, emberGone: 'Ember flies away, defeated!', poof: 'Poof! It’s gone.',
     hitMore: n => `Hit! ${n} more in a row.`, heart: '+1 heart', potion: '+1 free-try potion', chestOpen: 'The chest pops open!',
@@ -400,9 +400,9 @@ const I18N = {
     answerWas: (a, to) => (to ? 'Time’s up! ' : 'Oops! ') + `The answer was ${a}.`,
     napTitle: 'Your hero needs a nap!', napBody: (r, s, g, k) => `You explored ${r} rooms and solved ${s} puzzles. You keep half your bag: ${k} of ${g} gold.`,
     floorCleared: n => `Floor ${n} cleared!`, bag: g => `You have ${g} gold in your bag.`,
-    stopOrMore: 'Go home to keep it all, or go deeper. Harder puzzles give more gold. If you run out of hearts you lose half your bag.',
-    goHome: g => `Go home with ${g} gold`, goSame: n => `Go deeper, same puzzles (level ${n})`, goHarder: n => `Go deeper, harder puzzles (level ${n}, more gold)`,
-    floorSame: n => `Floor ${n}: same puzzles!`, floorStart: n => `Floor ${n}: harder puzzles, more gold!`,
+    stopOrMore: 'Go home to keep it all, or go deeper: each floor gives more gold. If you run out of hearts you lose half your bag.',
+    goHome: g => `Go home with ${g} gold`, goSame: n => `Stay on level ${n}`, goHarder: (n, d) => `Go up to level ${n}: ${d}`,
+    floorSame: n => `Floor ${n}: same puzzles!`, floorStart: n => `Level ${n}: new puzzles!`,
     homeTitle: 'Welcome home!', homeBody: (r, g) => `You explored ${r} rooms and brought back ${g} gold.`, ok: 'OK',
     playAgain: 'Play again', backHero: 'Back to my hero', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'), leave: g => `Leave now, keep half (${g} gold)`,
     statsTitle: n => `${n}’s stats`, answered: 'Puzzles answered', firstTry: 'Right first time', runs: 'Runs played', topLevel: 'Highest level',
@@ -411,16 +411,16 @@ const I18N = {
     tricky: 'Trickiest puzzles', missed: n => `missed ${n}×`, recent: 'Recent runs', runLine: (r, p) => `${r} rooms, ${p}% right`,
     noStats: 'Play a run to see stats here.', noMissed: 'No missed puzzles yet.', resetStats: 'Reset stats', confirm: 'Tap again to confirm',
     tips: {
-      low: ['Count on from the bigger number. For 2 + 7, start at 7 and count 8, 9.', 'Make a 10! 8 + 5 is 8 + 2 + 3, so 10 + 3 = 13.', 'Doubles help: 6 + 6 = 12, so 6 + 7 is one more, 13.', 'For 3 + ? = 8, count up from 3 to 8 on your fingers. That’s 5.', 'Taking away? Count back: 9 − 3 goes 8, 7, 6.'],
-      mid: ['Times 10? Just add a zero: 7 × 10 = 70.', 'Times 5 is half of times 10: 5 × 8 = 80 ÷ 2 = 40.', 'The 9 trick: 9 × 7 = 70 − 7 = 63.', 'Times 2 means double it: 2 × 8 = 8 + 8 = 16.', 'Adding 9? Add 10, then take 1 away: 34 + 9 = 44 − 1 = 43.', 'Order doesn’t matter for times: 3 × 8 is the same as 8 × 3.'],
-      high: ['Dividing is times backwards. For 42 ÷ 6, ask ? × 6 = 42.', 'Times before plus: 2 + 3 × 4 = 2 + 12 = 14.', 'Brackets go first: (2 + 3) × 4 = 5 × 4 = 20.', 'Split big numbers: 23 × 4 = 20 × 4 + 3 × 4 = 80 + 12 = 92.', 'Round, then fix: 49 + 37 = 50 + 37 − 1 = 86.', 'Check with the opposite: if 56 ÷ 7 = 8, then 8 × 7 is 56.'],
+      low: ['Count on from the bigger number. For 2 + 7, start at 7 and count 8, 9.', 'Make a 10! 8 + 5 is 8 + 2 + 3, so 10 + 3 = 13.', 'Doubles help: 6 + 6 = 12, so 6 + 7 is one more, 13.', 'Adding 0? The number stays the same: 7 + 0 = 7.', 'Taking away? Count back: 9 − 3 goes 8, 7, 6.'],
+      mid: ['Times 10? Just add a zero: 7 × 10 = 70.', 'Times 5 is half of times 10: 5 × 8 = 80 ÷ 2 = 40.', 'The 9 trick: 9 × 7 = 70 − 7 = 63.', 'Times 2 means double it: 2 × 8 = 8 + 8 = 16.', 'Times 0 is always 0, and times 1 changes nothing: 6 × 1 = 6.', 'Order doesn’t matter for times: 3 × 8 is the same as 8 × 3.'],
+      high: ['Dividing is times backwards. For 42 ÷ 6, ask ? × 6 = 42.', 'Dividing by 2 means halving: 18 ÷ 2 = 9.', 'Dividing by 10? Take the zero away: 70 ÷ 10 = 7.', 'Dividing by 5? Use the 5 times table: 35 ÷ 5 = 7, because 7 × 5 = 35.', 'Share it out: 12 ÷ 3 is 12 sweets shared by 3 friends. Each gets 4.', 'Check with the opposite: if 56 ÷ 7 = 8, then 8 × 7 is 56.'],
     },
   },
   fr: {
     tag: 'Résous les calculs, ouvre les portes, trouve des trésors.', newHero: 'Nouveau personnage', heroName: 'Prénom', nameNeeded: 'Écris d’abord un prénom',
     whereStart: 'Par où commencer ?',
-    s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Plus grands nombres et tables faciles, 7–8 ans',
-    s3: 'As du calcul', s3d: 'Tables et divisions, 9 ans et plus', cancel: 'Annuler', create: 'Créer',
+    s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Les additions, c’est facile : place aux soustractions, 6–7 ans',
+    s3: 'As du calcul', s3d: 'Tables de multiplication, 8 ans et plus', cancel: 'Annuler', create: 'Créer',
     del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
     enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', goldFound: 'Or trouvé',
     wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabBoosts: 'Bonus', tabMore: 'Plus', wardNote: 'Achète des tenues avec ton or. Les tenues spéciales se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
@@ -429,11 +429,12 @@ const I18N = {
     boosts: 'Bonus pour la prochaine partie', boostNote: 'Les bonus achetés s’activent à l’entrée du donjon. Touche encore pour récupérer ton or.',
     boostHeart: '+1 cœur', boostPotion: '+1 potion', boostOn: 'Prêt ! Touche pour annuler', potionMax: n => `Max ${n} potion à ce niveau`,
     buy: p => `Acheter pour ${p} or`, needMore: n => `Il te manque ${n} or.`, special: 'Spécial', close: 'Fermer',
-    req: (k, n, o) => ({ streak: `Réussis ${n} calculs d’affilée.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
+    req: (k, n, o) => ({ clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
     progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
     lvTitle: 'Niveau des calculs (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
-    level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`,
-    lvDesc: ['Additions jusqu’à 10, deux choix', 'Additions et soustractions jusqu’à 10', 'Jusqu’à 20, nombres manquants', 'Jusqu’à 50, ×2 ×5 ×10, avec chrono', 'Toutes les tables, avec chrono', 'Réponse à taper, jusqu’à 100', 'Divisions et facteurs manquants', 'Grands nombres, fois à 2 chiffres', 'Fois avant plus, parenthèses', 'Grand mélange'],
+    level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`, dragonNear: 'La dragonne attend derrière la prochaine porte !',
+    cleared: n => `Niveau ${n} réussi !`,
+    lvDesc: ['Additions jusqu’à 10', 'Additions, résultats de 8 à 15', 'Additions, résultats de 10 à 20', 'Soustractions jusqu’à 10', 'Multiplications jusqu’à 5 × 5', 'Multiplications jusqu’à 5 × 10', 'Tables jusqu’à 10 × 10', 'Divisions par 2 à 5', 'Divisions par 2 à 10', 'Grand mélange : + − × ÷'],
     skins: ['Chevalière', 'Archère', 'Magicienne', 'Pirate', 'Naine', 'Étoile', 'Ninja', 'Reine', 'Robot', 'Viking', 'Astronaute', 'Fée', 'Mage des glaces', 'Championne'],
     mon: { slime: 'Une gelée toute molle', bat: 'Une chauve-souris endormie', goblin: 'Un gobelin grognon' },
     monIntro: n => `${n} bloque le passage ! Résous le calcul pour passer.`,
@@ -443,7 +444,6 @@ const I18N = {
     doorsLocked: 'Les portes sont fermées. Touche une porte pour essayer son cadenas.', doorsOpen: 'Par où aller ? Touche une porte.',
     doors: { left: 'Gauche', top: 'Milieu', right: 'Droite' }, lockAsks: 'Ce cadenas demande :', otherDoor: 'Autre porte', leaveIt: 'Laisser',
     fast: 'Super rapide ! +1 potion d’essai gratuit', streakSkin: (n, k) => `${n} d’affilée ! Nouvelle tenue : ${k}`, streak: n => `${n} d’affilée !`,
-    levelUp: n => `Niveau ${n} ! Des calculs plus corsés`, levelDown: n => `Niveau ${n} : on s’entraîne un peu`,
     praise: ['Exact !', 'Bien joué !', 'Trouvé !', 'Génial !'],
     dragonBeaten: g => `Dragonne vaincue ! +${g} or, +1 cœur`, gold: g => `+${g} or`, emberGone: 'Braise s’envole, vaincue !', poof: 'Pouf ! Disparu.',
     hitMore: n => `Touché ! Encore ${n} d’affilée.`, heart: '+1 cœur', potion: '+1 potion d’essai gratuit', chestOpen: 'Le coffre s’ouvre !',
@@ -452,9 +452,9 @@ const I18N = {
     answerWas: (a, to) => (to ? 'Temps écoulé ! ' : 'Oups ! ') + `La réponse était ${a}.`,
     napTitle: 'C’est l’heure de la sieste !', napBody: (r, s, g, k) => `Tu as exploré ${r} salles et résolu ${s} calculs. Tu gardes la moitié de ton sac : ${k} or sur ${g}.`,
     floorCleared: n => `Étage ${n} terminé !`, bag: g => `Tu as ${g} or dans ton sac.`,
-    stopOrMore: 'Rentre pour tout garder, ou descends. Des calculs plus durs rapportent plus d’or. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
-    goHome: g => `Rentrer avec ${g} or`, goSame: n => `Descendre, mêmes calculs (niveau ${n})`, goHarder: n => `Descendre, calculs plus durs (niveau ${n}, plus d’or)`,
-    floorSame: n => `Étage ${n} : mêmes calculs !`, floorStart: n => `Étage ${n} : calculs plus durs, plus d’or !`,
+    stopOrMore: 'Rentre pour tout garder, ou descends : chaque étage rapporte plus d’or. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
+    goHome: g => `Rentrer avec ${g} or`, goSame: n => `Rester au niveau ${n}`, goHarder: (n, d) => `Passer au niveau ${n} : ${d}`,
+    floorSame: n => `Étage ${n} : mêmes calculs !`, floorStart: n => `Niveau ${n} : nouveaux calculs !`,
     homeTitle: 'Bienvenue à la maison !', homeBody: (r, g) => `Tu as exploré ${r} salles et rapporté ${g} or.`, ok: 'OK',
     playAgain: 'Rejouer', backHero: 'Retour à mon personnage', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'), leave: g => `Partir maintenant, garder la moitié (${g} or)`,
     statsTitle: n => `Stats de ${n}`, answered: 'Calculs faits', firstTry: 'Justes du premier coup', runs: 'Parties jouées', topLevel: 'Niveau max',
@@ -463,9 +463,9 @@ const I18N = {
     tricky: 'Calculs les plus difficiles', missed: n => `raté ${n} fois`, recent: 'Dernières parties', runLine: (r, p) => `${r} salles, ${p} % justes`,
     noStats: 'Joue une partie pour voir les stats ici.', noMissed: 'Aucun calcul raté pour l’instant.', resetStats: 'Effacer les stats', confirm: 'Touche encore pour confirmer',
     tips: {
-      low: ['Compte à partir du plus grand nombre : pour 2 + 7, pars de 7 et compte 8, 9.', 'Fais 10 ! 8 + 5, c’est 8 + 2 + 3, donc 10 + 3 = 13.', 'Les doubles aident : 6 + 6 = 12, donc 6 + 7, c’est un de plus : 13.', 'Pour 3 + ? = 8, compte de 3 jusqu’à 8 sur tes doigts. Ça fait 5.', 'Pour enlever, compte à rebours : 9 − 3, c’est 8, 7, 6.'],
-      mid: ['Fois 10 ? Ajoute juste un zéro : 7 × 10 = 70.', 'Fois 5, c’est la moitié de fois 10 : 5 × 8 = 80 ÷ 2 = 40.', 'L’astuce du 9 : 9 × 7 = 70 − 7 = 63.', 'Fois 2, c’est le double : 2 × 8 = 8 + 8 = 16.', 'Ajouter 9 ? Ajoute 10, puis enlève 1 : 34 + 9 = 44 − 1 = 43.', 'L’ordre ne compte pas pour les fois : 3 × 8, c’est pareil que 8 × 3.'],
-      high: ['Diviser, c’est multiplier à l’envers. Pour 42 ÷ 6, cherche ? × 6 = 42.', 'Les fois avant les plus : 2 + 3 × 4 = 2 + 12 = 14.', 'Les parenthèses d’abord : (2 + 3) × 4 = 5 × 4 = 20.', 'Découpe les grands nombres : 23 × 4 = 20 × 4 + 3 × 4 = 80 + 12 = 92.', 'Arrondis, puis corrige : 49 + 37 = 50 + 37 − 1 = 86.', 'Vérifie avec l’opération inverse : si 56 ÷ 7 = 8, alors 8 × 7 = 56.'],
+      low: ['Compte à partir du plus grand nombre : pour 2 + 7, pars de 7 et compte 8, 9.', 'Fais 10 ! 8 + 5, c’est 8 + 2 + 3, donc 10 + 3 = 13.', 'Les doubles aident : 6 + 6 = 12, donc 6 + 7, c’est un de plus : 13.', 'Ajouter 0 ? Le nombre ne change pas : 7 + 0 = 7.', 'Pour enlever, compte à rebours : 9 − 3, c’est 8, 7, 6.'],
+      mid: ['Fois 10 ? Ajoute juste un zéro : 7 × 10 = 70.', 'Fois 5, c’est la moitié de fois 10 : 5 × 8 = 80 ÷ 2 = 40.', 'L’astuce du 9 : 9 × 7 = 70 − 7 = 63.', 'Fois 2, c’est le double : 2 × 8 = 8 + 8 = 16.', 'Fois 0, ça fait toujours 0, et fois 1 ne change rien : 6 × 1 = 6.', 'L’ordre ne compte pas pour les fois : 3 × 8, c’est pareil que 8 × 3.'],
+      high: ['Diviser, c’est multiplier à l’envers. Pour 42 ÷ 6, cherche ? × 6 = 42.', 'Diviser par 2, c’est prendre la moitié : 18 ÷ 2 = 9.', 'Diviser par 10 ? Enlève le zéro : 70 ÷ 10 = 7.', 'Diviser par 5 ? Pense à la table de 5 : 35 ÷ 5 = 7, car 7 × 5 = 35.', 'Partage : 12 ÷ 3, c’est 12 bonbons pour 3 amies. Chacune en a 4.', 'Vérifie avec l’opération inverse : si 56 ÷ 7 = 8, alors 8 × 7 = 56.'],
     },
   },
 };
@@ -615,34 +615,34 @@ const PAL = {
 };
 const SKINS = [
   { H: '#c9d2e3', B: '#4f8cf0', L: '#2c4f9e', cost: 0 },
-  { H: '#3f9e4f', B: '#7bd66a', L: '#6b4a2a', cost: 60 },
-  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', cost: 150 },
-  { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', cost: 250 },
+  { H: '#3f9e4f', B: '#7bd66a', L: '#6b4a2a', req: ['clear', 1, 1] },
+  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', cost: 40 },
+  { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', req: ['clear', 1, 3] },
   { H: '#e8892b', B: '#b5562b', L: '#5a3a22', req: ['streak', 10] },
   { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 30] },
-  { H: '#2b2240', B: '#46466e', L: '#2b2240', cost: 400 },
-  { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['room', 20] },
-  { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['level', 6] },
-  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', cost: 600 },
+  { H: '#2b2240', B: '#46466e', L: '#2b2240', cost: 80 },
+  { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['clear', 1, 7] },
+  { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['clear', 1, 5] },
+  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', cost: 150 },
   { H: '#ffffff', B: '#dfe7f2', L: '#8a97a8', req: ['op', 100, 'mul'] },
-  { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', cost: 900 },
-  { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['op', 50, 'div'] },
-  { H: '#ffd23f', B: '#ff4f6d', L: '#ffd23f', req: ['floor', 5] },
+  { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', cost: 250 },
+  { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['clear', 1, 9] },
+  { H: '#ffd23f', B: '#ff4f6d', L: '#ffd23f', req: ['dragons', 20] },
 ];
 const PETS = [
-  { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, cost: 50 },
-  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'OOPPOO.O', '.OOOO..O', '.OOOOOOO', '.O.O.O..'], pal: { O: '#ff9f43', E: '#2b2240', P: '#ff8fb1' }, cost: 100 },
-  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, cost: 100 },
-  { spr: ['.W..W...', '.WP.WP..', '.W..W...', 'WWWWWW..', 'WEWWEW..', 'WWPPWW..', '.WWWW.W.', '.W..W...'], pal: { W: '#f4f0ff', P: '#ff8fb1', E: '#2b2240' }, cost: 200 },
+  { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, cost: 20 },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'OOPPOO.O', '.OOOO..O', '.OOOOOOO', '.O.O.O..'], pal: { O: '#ff9f43', E: '#2b2240', P: '#ff8fb1' }, req: ['clear', 1, 2] },
+  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, cost: 40 },
+  { spr: ['.W..W...', '.WP.WP..', '.W..W...', 'WWWWWW..', 'WEWWEW..', 'WWPPWW..', '.WWWW.W.', '.W..W...'], pal: { W: '#f4f0ff', P: '#ff8fb1', E: '#2b2240' }, req: ['clear', 1, 4] },
   { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['solved', 150] },
   { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['room', 15] },
   { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['dragons', 5] },
   { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15] },
-  { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, cost: 300 },
-  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, cost: 500 },
-  { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 100, 'sub'] },
-  { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['op', 60, 'miss'] },
-  { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['level', 8] },
+  { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, req: ['clear', 1, 6] },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, cost: 120 },
+  { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 50, 'sub'] },
+  { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['clear', 1, 8] },
+  { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['clear', 1, 10] },
 ];
 const BOOSTS = { heart: 20, potion: 12 };
 const heroPal = i => { const s = SKINS[i] || SKINS[0]; return { H: s.H, B: s.B, L: s.L, S: '#ffd2a6', E: '#2b2240', Y: '#ffc83d', K: '#4a3020' }; };
@@ -689,51 +689,42 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
 
 /* ================= levels & problems ================= */
+// Levels: choices early, typed answers from the full tables. No timer until level 7: time to learn.
 const LV = {
-  1: { mode: 'choice', n: 2, timer: 0, free: true },
+  1: { mode: 'choice', n: 3, timer: 0, free: true },
   2: { mode: 'choice', n: 3, timer: 0, free: true },
   3: { mode: 'choice', n: 3, timer: 0, free: true },
-  4: { mode: 'choice', n: 4, timer: 20, free: false },
-  5: { mode: 'choice', n: 4, timer: 15, free: false },
-  6: { mode: 'input', n: 0, timer: 20, free: false },
-  7: { mode: 'input', n: 0, timer: 15, free: false },
-  8: { mode: 'input', n: 0, timer: 25, free: false },
-  9: { mode: 'input', n: 0, timer: 25, free: false },
-  10: { mode: 'input', n: 0, timer: 20, free: false },
+  4: { mode: 'choice', n: 3, timer: 0, free: true },
+  5: { mode: 'choice', n: 4, timer: 0, free: false },
+  6: { mode: 'choice', n: 4, timer: 0, free: false },
+  7: { mode: 'input', n: 0, timer: 30, free: false },
+  8: { mode: 'input', n: 0, timer: 30, free: false },
+  9: { mode: 'input', n: 0, timer: 30, free: false },
+  10: { mode: 'input', n: 0, timer: 25, free: false },
 };
+// right answers in a row needed before the dragon shows up, and right answers in a row to beat it
+const bossAfter = lv => lv <= 4 ? 3 : 5;
+const bossNeed = lv => lv <= 4 ? 2 : 3;
 function gen(lv) {
-  const T = [2, 3, 4, 5, 6, 7, 8, 9, 10];
-  const add = max => { const x = rnd(1, max - 1), y = rnd(1, max - x); return [`${x} + ${y} = ?`, x + y]; };
-  const sub = max => { const x = rnd(2, max), y = rnd(1, x); return [`${x} − ${y} = ?`, x - y]; };
-  const missAdd = max => { const x = rnd(1, max - 2), s = rnd(x + 1, max); return [`${x} + ? = ${s}`, s - x]; };
-  const missSub = max => { const s = rnd(3, max), y = rnd(1, s - 1); return [`${s} − ? = ${s - y}`, y]; };
-  const mul = (as, lo, hi) => { const x = pick(as), y = rnd(lo, hi); return Math.random() < .5 ? [`${x} × ${y} = ?`, x * y] : [`${y} × ${x} = ?`, x * y]; };
-  const div = () => { const b = rnd(2, 10), q = rnd(1, 10); return [`${b * q} ÷ ${b} = ?`, q]; };
-  const missMul = () => { const b = rnd(2, 10), q = rnd(2, 10); return Math.random() < .5 ? [`? × ${b} = ${b * q}`, q] : [`${b} × ? = ${b * q}`, q]; };
+  // 0 is allowed but rarer, so it doesn't crowd the facts worth practising
+  const n0 = (lo, hi) => { let v = rnd(lo, hi); if (v === 0 && Math.random() < .6) v = rnd(1, hi); return v; };
+  const sw = (x, y) => Math.random() < .5 ? [x, y] : [y, x];
+  const add = (lo, hi) => { const sum = rnd(lo, hi), x = rnd(Math.max(0, sum - 10), Math.min(10, sum)); return [`${x} + ${sum - x} = ?`, sum]; };
+  const sub = () => { const x = rnd(1, 10), y = n0(0, x); return [`${x} − ${y} = ?`, x - y]; };
+  const mul = (a, b) => { const [x, y] = sw(n0(0, a), n0(0, b)); return [`${x} × ${y} = ?`, x * y]; };
+  const div = hi => { const b = rnd(2, hi), q = rnd(1, 10); return [`${b * q} ÷ ${b} = ?`, q]; };
   let r;
   switch (lv) {
-    case 1: { const x = rnd(0, 5), y = rnd(1, 5); r = [`${x} + ${y} = ?`, x + y]; break; }
-    case 2: r = Math.random() < .6 ? add(10) : sub(10); break;
-    case 3: r = pick([() => add(20), () => sub(20), () => missAdd(20), () => missAdd(10)])(); break;
-    case 4: r = pick([() => add(50), () => sub(50), () => mul([2, 5, 10], 1, 10), () => missAdd(20)])(); break;
-    case 5: r = pick([() => mul(T, 1, 10), () => mul(T, 2, 10), () => missAdd(50), () => sub(50)])(); break;
-    case 6: r = pick([() => add(100), () => sub(100), () => mul(T, 2, 10), () => missAdd(100), () => missSub(50)])(); break;
-    case 7: r = pick([div, missMul, () => mul(T, 3, 10), () => add(100)])(); break;
-    case 8: r = pick([
-      () => { const x = rnd(11, 49), y = rnd(2, 9); return [`${x} × ${y} = ?`, x * y]; },
-      () => { const x = rnd(120, 900), y = rnd(15, 99); return [`${x} + ${y} = ?`, x + y]; },
-      () => { const x = rnd(120, 900), y = rnd(15, 99); return [`${x} − ${y} = ?`, x - y]; },
-      div])(); break;
-    case 9: r = pick([
-      () => { const x = rnd(1, 20), y = rnd(2, 9), z = rnd(2, 9); return [`${x} + ${y} × ${z} = ?`, x + y * z]; },
-      () => { const x = rnd(1, 6), y = rnd(1, 6), z = rnd(2, 9); return [`(${x} + ${y}) × ${z} = ?`, (x + y) * z]; },
-      () => { const y = rnd(2, 9), z = rnd(2, 9), x = rnd(1, y * z - 1); return [`${y} × ${z} − ${x} = ?`, y * z - x]; },
-      missMul])(); break;
-    default: r = pick([
-      () => { const b = rnd(3, 9), q = rnd(11, 25); return [`${b * q} ÷ ${b} = ?`, q]; },
-      () => { const x = rnd(12, 25), y = rnd(3, 9); return [`${x} × ${y} = ?`, x * y]; },
-      () => { const a = rnd(2, 9), b = rnd(2, 9), c = rnd(2, 9), d = rnd(2, 9); return [`${a} × ${b} + ${c} × ${d} = ?`, a * b + c * d]; },
-      () => { const a = rnd(3, 12), b = rnd(3, 12); return [`${a} × ? = ${a * b}`, b]; }])();
+    case 1: r = add(1, 10); break;
+    case 2: r = add(8, 15); break;
+    case 3: r = add(10, 20); break;
+    case 4: r = sub(); break;
+    case 5: r = mul(5, 5); break;
+    case 6: r = mul(5, 10); break;
+    case 7: r = mul(10, 10); break;
+    case 8: r = div(5); break;
+    case 9: r = div(10); break;
+    default: r = pick([() => add(10, 20), sub, () => mul(10, 10), () => div(10)])();
   }
   const p = Object.assign({ text: r[0], answer: r[1] }, LV[lv] || LV[10]);
   if (p.mode === 'choice') p.opts = makeChoices(p);
@@ -741,14 +732,17 @@ function gen(lv) {
 }
 function makeChoices(p) {
   const a = p.answer, set = new Set([a]);
-  const near = shuffle([a + 1, a - 1, a + 2, a - 2, a + 3]);
+  let near = shuffle([a + 1, a - 1, a + 2, a - 2, a + 3]);
+  const m = p.text.match(/^(\d+) × (\d+)/);
+  // for times, the classic slips are a neighbour in the table or adding instead of multiplying
+  if (m) { const x = +m[1], y = +m[2]; near = shuffle([x * (y + 1), x * (y - 1), (x + 1) * y, (x - 1) * y, x + y]).concat(near); }
   const far = a >= 10 ? shuffle([a + 10, a - 10]) : [];
   for (const v of near.concat(far)) { if (set.size >= p.n) break; if (v >= 0) set.add(v); }
   let k = 4; while (set.size < p.n) set.add(a + k++);
   return [...set].sort((x, y) => x - y);
 }
 
-const tipFor = lv => { const band = lv <= 3 ? 'low' : lv <= 6 ? 'mid' : 'high'; return { band, i: rnd(0, I18N.en.tips[band].length - 1) }; };
+const tipFor = lv => { const band = lv <= 4 ? 'low' : lv <= 7 ? 'mid' : 'high'; return { band, i: rnd(0, I18N.en.tips[band].length - 1) }; };
 const tipText = tp => { const v = t('tips'); return frSpace(v[tp.band][tp.i]); };
 
 /* ================= sound ================= */
@@ -775,8 +769,8 @@ function sfx(type) {
 let P = null;   // current profile
 let R = null;   // current run
 const level = () => clamp(Math.floor(P.rating), 1, 10);
-const runLevel = () => clamp(level() + (R && !R.over ? R.bonus : 0), 1, 10);
-const potionCap = () => runLevel() <= 3 ? 3 : 1;
+const runLevel = level; // the level only changes by beating the dragon and choosing to go up
+const potionCap = () => runLevel() <= 4 ? 3 : 1;
 const ICON = {};
 
 function show(id) {
@@ -839,9 +833,11 @@ function migrate(p) {
   if (!p.opOk) p.opOk = {};
   if (p.maxLv == null) p.maxLv = clamp(Math.floor(p.rating), 1, 10);
   if (p.bestFloor == null) p.bestFloor = 0;
+  if (!Array.isArray(p.clears)) p.clears = [];
+  p.rating = clamp(Math.floor(p.rating), 1, 10);
   return p;
 }
-const progressOf = (k, o) => k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
+const progressOf = (k, o) => k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
 const greyPal = pal => Object.fromEntries(Object.keys(pal).map(k => [k, '#6a5a86']));
 function checkAchievements() {
   SKINS.forEach((s, i) => {
@@ -898,8 +894,11 @@ function openInfo(kind, i) {
     nodes.push(buy);
   } else {
     const [k, n, o] = it.req, c = Math.min(progressOf(k, o), n);
-    const bar = el('div', 'prog'), fill = el('i'); fill.style.width = Math.round(c / n * 100) + '%'; bar.appendChild(fill);
-    nodes.push(el('p', 'req', t('req', k, n, o)), bar, el('p', null, t('progress', c, n)));
+    nodes.push(el('p', 'req', t('req', k, n, o)));
+    if (k !== 'clear') {
+      const bar = el('div', 'prog'), fill = el('i'); fill.style.width = Math.round(c / n * 100) + '%'; bar.appendChild(fill);
+      nodes.push(bar, el('p', null, t('progress', c, n)));
+    }
   }
   nodes.push(btn(t('close'), '', closeModal));
   modal(nodes); $('#modalCard').classList.add('info');
@@ -931,7 +930,7 @@ function renderLobby() {
   $('#lobbyName').textContent = P.name;
   const lv = level();
   $('#lobbyLvl').textContent = t('level', lv);
-  $('#lobbyBar').style.width = (lv >= 10 ? 100 : Math.round((P.rating - lv) * 100)) + '%';
+  $('#lobbyLvlDesc').textContent = t('lvDesc')[lv - 1];
   $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.gold;
   $('#lvVal').textContent = lv; $('#lvDesc').textContent = t('lvDesc')[lv - 1];
   $('#wallet').textContent = P.wallet; $('#walletIco').src = ICON.coin;
@@ -1123,7 +1122,10 @@ function hud() {
   for (let i = 0; i < R.hp; i++) { const im = el('img', 'px'); im.src = ICON.heart; im.alt = ''; h.appendChild(im); }
   h.setAttribute('aria-label', R.hp + ' hearts');
   $('#hudPotion').textContent = R.potions; $('#hudGold').textContent = R.gold;
-  $('#hudStreak').textContent = R.streak; $('#hudRoom').textContent = t('room', R.depth, R.floor * 6);
+  $('#hudStreak').textContent = R.streak;
+  const im = el('img', 'px'); im.src = ICON.dragon; im.alt = '';
+  const dr = $('#hudRoom'); dr.classList.toggle('ready', R.bossNext || (R.room && R.room.type === 'boss'));
+  dr.replaceChildren(im, document.createTextNode(R.bossNext ? '!' : `${Math.min(R.toBoss, bossAfter(runLevel()))}/${bossAfter(runLevel())}`));
 }
 function toast(text, icon) {
   const t = el('div', 'toast');
@@ -1140,16 +1142,16 @@ function later(fn, ms) { const run = R; setTimeout(() => { if (R === run && !run
 
 function startRun() {
   migrate(P);
-  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, bonus: 0, streak: 0, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
-  P.boosts = { heart: false, potion: false }; save();
+  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, streak: 0, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
+  P.boosts = { heart: false, potion: false }; seenLevel(); save();
   pet.x = 46; pet.y = 140;
   show('scr-game'); fit(); nextRoom();
 }
 function makeRoom(depth) {
   const lv = runLevel();
   let type;
-  if (depth === 1) type = 'monster';
-  else if (depth % 6 === 0) type = 'boss';
+  if (R.bossNext) { type = 'boss'; R.bossNext = false; R.toBoss = 0; }
+  else if (depth === 1) type = 'monster';
   else {
     const r = Math.random();
     type = r < .4 ? 'monster' : r < .62 ? 'chest' : (r < .76 && R.room && R.room.type !== 'coach') ? 'coach' : 'empty';
@@ -1157,10 +1159,10 @@ function makeRoom(depth) {
   const sides = pick([['left', 'top', 'right'], ['left', 'top'], ['top', 'right'], ['left', 'right'], ['left', 'top', 'right']]);
   const locked = type === 'empty' ? true : type === 'coach' || depth === 1 ? false : Math.random() < .4;
   const room = { type, locked, doors: sides.map(s => ({ side: s, open: !locked, p: null })), enc: null };
-  const pool = lv <= 3 ? ['slime', 'bat'] : lv <= 6 ? ['slime', 'bat', 'goblin'] : ['bat', 'goblin'];
+  const pool = lv <= 4 ? ['slime', 'bat'] : lv <= 7 ? ['slime', 'bat', 'goblin'] : ['bat', 'goblin'];
   if (type === 'monster') room.enc = { kind: 'monster', sprite: pick(pool), need: 1, progress: 0, alive: true };
-  if (type === 'boss') room.enc = { kind: 'boss', need: clamp(2 + Math.floor((lv - 1) / 3), 2, 5), progress: 0, alive: true };
-  if (type === 'chest') { const golden = lv >= 4 && Math.random() < .35; room.enc = { kind: 'chest', golden, need: golden ? (lv >= 8 ? 3 : 2) : 1, progress: 0, opened: false }; }
+  if (type === 'boss') room.enc = { kind: 'boss', need: bossNeed(lv), progress: 0, alive: true };
+  if (type === 'chest') { const golden = lv >= 3 && Math.random() < .3; room.enc = { kind: 'chest', golden, need: golden ? 2 : 1, progress: 0, opened: false }; }
   if (type === 'coach') room.enc = { kind: 'coach', tip: tipFor(lv) };
   return room;
 }
@@ -1262,17 +1264,12 @@ function right(dt) {
   const q = R.q; q.done = true; sfx('good');
   if (!q.wrongs) record(q, true, dt);
   R.streak++; R.solved++; P.solved++;
+  if (!(q.ctx.kind === 'enc' && R.room.type === 'boss') && !R.bossNext && ++R.toBoss >= bossAfter(runLevel())) { R.bossNext = true; later(() => toast(t('dragonNear'), 'dragon'), 700); }
   { const c = catOf(q.p.text); P.opOk[c] = (P.opOk[c] || 0) + 1; }
   if (R.streak > P.bestStreak) P.bestStreak = R.streak;
-  const before = level();
-  const fast = dt < (q.p.timer ? q.p.timer * .35 : 4);
-  P.rating = clamp(P.rating + (q.wrongs ? .08 : .2) + (fast && !q.wrongs ? .1 : 0), 1, 10.99);
   if (dt < 2 && !q.wrongs && q.ctx.kind !== 'door') { if (R.potions < potionCap()) { R.potions++; toast(t('fast'), 'potion'); } }
   if (R.streak >= 5 && R.streak % 5 === 0) toast(t('streak', R.streak), 'flame');
   checkAchievements();
-  const after = level();
-  if (after > before) toast(t('levelUp', after));
-  const st = stats(P); st.maxLv = Math.max(st.maxLv || 0, after); P.maxLv = Math.max(P.maxLv || 0, after);
   save(); hud();
   renderQ('good'); $('#answers').classList.add('off');
   say(pick(t('praise')));
@@ -1293,8 +1290,8 @@ function resolveRight(ctx) {
       later(() => {
         e.alive = false; fx.shake = now();
         burst(ENC.x, ENC.y, [e.kind === 'boss' ? '#ff7a45' : MONSTERS[e.sprite].col, '#ffffff'], 26);
-        const g = (e.kind === 'boss' ? 5 : 1) * (1 + R.bonus); R.gold += g;
-        if (e.kind === 'boss') { P.dragons++; later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten', g), 'coin'); sfx('win'); }
+        const g = (e.kind === 'boss' ? 5 : 1) * R.floor; R.gold += g;
+        if (e.kind === 'boss') { P.dragons++; if (!P.clears.includes(runLevel())) { P.clears.push(runLevel()); later(() => toast(t('cleared', runLevel()), 'flame'), 300); } later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten', g), 'coin'); sfx('win'); }
         else { toast(t('gold', g), 'coin'); sfx('coin'); }
         save(); hud();
         say(e.kind === 'boss' ? t('emberGone') : t('poof'));
@@ -1309,7 +1306,7 @@ function resolveRight(ctx) {
       e.opened = true; sfx('coin');
       burst(ENC.x, ENC.y - 6, ['#ffc83d', '#fff3a6', '#ffffff'], 22, true);
       if (R.potions < potionCap() && Math.random() < (e.golden ? .5 : .35)) { R.potions++; toast(t('potion'), 'potion'); }
-      else { const g = (e.golden ? rnd(5, 8) : rnd(2, 4)) * (1 + R.bonus); R.gold += g; toast(t('gold', g), 'coin'); }
+      else { const g = (e.golden ? rnd(5, 8) : rnd(2, 4)) * R.floor; R.gold += g; toast(t('gold', g), 'coin'); }
       save(); hud(); say(t('chestOpen'));
       later(showDoors, 1100);
     } else {
@@ -1321,10 +1318,8 @@ function resolveRight(ctx) {
 function wrong(b, timeout) {
   const q = R.q; if (!q || q.done) return;
   if (!q.wrongs) record(q, false, 0);
-  R.streak = 0; sfx('bad');
-  const before = level();
-  P.rating = clamp(P.rating - .3, 1, 10.99);
-  if (level() < before) toast(t('levelDown', level()));
+  // any mistake restarts the streak, so the dragon comes later
+  R.streak = 0; R.toBoss = 0; R.bossNext = false; sfx('bad');
   const e = R.room.enc, isEnc = q.ctx.kind === 'enc';
   const freeTry = false; // potions are the only free tries against monsters, bosses and chests
   const isDoor = q.ctx.kind === 'door';
@@ -1444,6 +1439,7 @@ function renderStats() {
 /* ================= end & menu ================= */
 function modal(nodes) { $('#modalCard').replaceChildren(...nodes); $('#modal').hidden = false; }
 function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.remove('info'); }
+function seenLevel() { const st = stats(P); st.maxLv = Math.max(st.maxLv || 0, level()); P.maxLv = Math.max(P.maxLv || 0, level()); }
 function bank(g) { P.wallet += g; P.gold += g; save(); }
 const halfBag = () => Math.floor(R.gold / 2);
 function floorCleared() {
@@ -1452,8 +1448,10 @@ function floorCleared() {
     el('h2', null, t('floorCleared', R.floor)),
     el('p', null, t('bag', R.gold)),
     el('p', null, t('stopOrMore')),
+    ...(runLevel() < 10 ? [btn(t('goHarder', runLevel() + 1, t('lvDesc')[runLevel()]), 'primary', () => {
+      closeModal(); R.floor++; P.rating = runLevel() + 1; R.potions = Math.min(R.potions, potionCap()); seenLevel(); save(); hud(); toast(t('floorStart', runLevel()), 'flame'); showDoors();
+    })] : []),
     btn(t('goSame', runLevel()), '', () => { closeModal(); R.floor++; hud(); toast(t('floorSame', R.floor), 'flame'); showDoors(); }),
-    ...(runLevel() < 10 ? [btn(t('goHarder', runLevel() + 1), 'primary', () => { closeModal(); R.floor++; R.bonus++; hud(); toast(t('floorStart', R.floor), 'flame'); showDoors(); })] : []),
     btn(t('goHome', R.gold), 'gold', () => {
       closeModal(); const g = R.gold, r = R.depth; bank(g); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby');
       modal([el('h2', null, t('homeTitle')), el('p', null, t('homeBody', r, g)), btn(t('ok'), 'primary', closeModal)]);
@@ -1518,6 +1516,7 @@ ICON.heart = spriteURL(SPR.heart, PAL.heart, 3);
 ICON.potion = spriteURL(SPR.potion, PAL.potion, 3);
 ICON.coin = spriteURL(SPR.coin, PAL.coin, 3);
 ICON.flame = spriteURL(SPR.flame, PAL.flame, 3);
+ICON.dragon = spriteURL(SPR.dragon, PAL.dragon, 2);
 $('#icoPotion').src = ICON.potion; $('#icoCoin').src = ICON.coin; $('#icoFlame').src = ICON.flame;
 load();
 applyLang();
