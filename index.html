@@ -1223,6 +1223,8 @@ function ask(ctx) {
   let p;
   if (ctx.kind === 'door') { ctx.door.p = ctx.door.p || gen(runLevel()); p = ctx.door.p; }
   else p = gen(runLevel());
+  // from level 3 the dragon wants typed answers (levels 7+ are typed everywhere)
+  if (ctx.kind === 'enc' && R.room.type === 'boss' && runLevel() >= 3 && p.mode === 'choice') { p.mode = 'input'; delete p.opts; }
   R.phase = 'question';
   R.q = { p, ctx, t0: now(), wrongs: 0, typed: '', done: false };
   renderQ();
