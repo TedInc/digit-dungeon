@@ -702,7 +702,7 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
 
 /* ================= levels & problems ================= */
-// Levels: choices early, typed answers from the full tables. No timer until level 7: time to learn.
+// Levels: choices early, typed answers from the full tables. No timer until level 7, then it gets shorter.
 const LV = {
   1: { mode: 'choice', n: 3, timer: 0, free: true },
   2: { mode: 'choice', n: 3, timer: 0, free: true },
@@ -710,21 +710,21 @@ const LV = {
   4: { mode: 'choice', n: 3, timer: 0, free: true },
   5: { mode: 'choice', n: 4, timer: 0, free: false },
   6: { mode: 'choice', n: 4, timer: 0, free: false },
-  7: { mode: 'input', n: 0, timer: 30, free: false },
-  8: { mode: 'input', n: 0, timer: 30, free: false },
-  9: { mode: 'input', n: 0, timer: 30, free: false },
-  10: { mode: 'input', n: 0, timer: 25, free: false },
+  7: { mode: 'input', n: 0, timer: 20, free: false },
+  8: { mode: 'input', n: 0, timer: 10, free: false },
+  9: { mode: 'input', n: 0, timer: 10, free: false },
+  10: { mode: 'input', n: 0, timer: 5, free: false },
 };
 // right answers in a row needed before the dragon shows up, and right answers in a row to beat it
 const bossAfter = lv => lv <= 4 ? 3 : 5;
 const bossNeed = lv => lv <= 4 ? 2 : 3;
 function gen(lv) {
-  // 0 is allowed but rarer, so it doesn't crowd the facts worth practising
-  const n0 = (lo, hi) => { let v = rnd(lo, hi); if (v === 0 && Math.random() < .6) v = rnd(1, hi); return v; };
+  // a 0 (in the puzzle or as the answer) shows up in about 1 puzzle in 20, so it doesn't crowd the facts worth practising
+  const zero = () => Math.random() < .05;
   const sw = (x, y) => Math.random() < .5 ? [x, y] : [y, x];
-  const add = (lo, hi) => { const sum = rnd(lo, hi), x = rnd(Math.max(0, sum - 10), Math.min(10, sum)); return [`${x} + ${sum - x} = ?`, sum]; };
-  const sub = () => { const x = rnd(1, 10), y = n0(0, x); return [`${x} − ${y} = ?`, x - y]; };
-  const mul = (a, b) => { const [x, y] = sw(n0(0, a), n0(0, b)); return [`${x} × ${y} = ?`, x * y]; };
+  const add = (lo, hi) => { const sum = rnd(Math.max(2, lo), hi), x = sum <= 10 && zero() ? pick([0, sum]) : rnd(Math.max(1, sum - 10), Math.min(9, sum - 1)); return [`${x} + ${sum - x} = ?`, sum]; };
+  const sub = () => { const x = rnd(2, 10), y = zero() ? pick([0, x]) : rnd(1, x - 1); return [`${x} − ${y} = ?`, x - y]; };
+  const mul = (a, b) => { let x = rnd(1, a), y = rnd(1, b); if (zero()) { if (Math.random() < .5) x = 0; else y = 0; } [x, y] = sw(x, y); return [`${x} × ${y} = ?`, x * y]; };
   const div = hi => { const b = rnd(2, hi), q = rnd(1, 10); return [`${b * q} ÷ ${b} = ?`, q]; };
   let r;
   switch (lv) {
