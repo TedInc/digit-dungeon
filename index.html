@@ -702,7 +702,7 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
 
 /* ================= levels & problems ================= */
-// Levels: choices early, typed answers from the full tables. No timer until level 7, then it gets shorter.
+// Levels: choices early, typed answers from the full tables. No timer until level 7, then it gets shorter (+5 s for typed answers).
 const LV = {
   1: { mode: 'choice', n: 3, timer: 0, free: true },
   2: { mode: 'choice', n: 3, timer: 0, free: true },
@@ -740,6 +740,7 @@ function gen(lv) {
     default: r = pick([() => add(10, 20), sub, () => mul(10, 10), () => div(10)])();
   }
   const p = Object.assign({ text: r[0], answer: r[1] }, LV[lv] || LV[10]);
+  if (p.timer && p.mode === 'input') p.timer += 5; // typing takes longer than tapping a choice
   if (p.mode === 'choice') p.opts = makeChoices(p);
   return p;
 }
