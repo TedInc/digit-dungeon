@@ -116,7 +116,23 @@ input[type=text]{
 @media (prefers-reduced-motion: reduce){.tab.new,.skin.new{animation:none;box-shadow:0 4px 0 var(--shadow),0 0 0 3px var(--gold)}.skin.new img{animation:none}}
 .panes{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:2px 0 10px}
 .pane{display:flex;flex-direction:column;gap:10px}
-.lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px}
+.map{position:relative;border:3px solid var(--edge);border-radius:10px;overflow:hidden;box-shadow:0 4px 0 var(--shadow)}
+.map canvas{display:block;width:100%;height:auto}
+.node{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;min-height:0;padding:0;border-radius:50%;
+  font-family:var(--read);font-size:22px;font-weight:600;display:grid;place-items:center}
+.node.done{background:var(--gold);color:#2b2240}
+.node.open{background:var(--primary);color:#fff}
+.node.lock{background:#6a5a86;color:#d8cfee;box-shadow:0 3px 0 var(--shadow)}
+.node .st{position:absolute;top:43px;left:50%;transform:translateX(-50%);font-size:17px;line-height:1;letter-spacing:0;color:#ffc83d;
+  text-shadow:0 0 2px #2b2240,0 0 2px #2b2240;white-space:nowrap}
+.node.new{animation:glow 1.2s ease-in-out infinite alternate}
+.map .me{position:absolute;width:36px;height:36px;transform:translate(-50%,-100%);pointer-events:none}
+@media (prefers-reduced-motion: reduce){.node.new{animation:none;box-shadow:0 4px 0 var(--shadow),0 0 0 3px var(--gold)}}
+.lvcard .stars{font-size:28px;color:var(--gold);letter-spacing:2px;text-shadow:0 2px 0 var(--edge)}
+.lvcard .rw{display:flex;align-items:center;justify-content:center;gap:8px}
+.lvcard .rw img{width:44px;height:44px}
+.lobby-top{display:flex;gap:14px;align-items:center;margin-top:8px;position:relative}
+.lobby-top .more{position:absolute;top:0;right:0;min-height:36px;padding:2px 10px;font-size:15px}
 #lobbyHero{width:96px;height:96px;background:var(--card);border:3px solid var(--edge);border-radius:10px;padding:6px}
 .lobby-top h2{margin:0;font-size:30px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
@@ -268,24 +284,26 @@ h3{margin:0 0 8px;font-size:18px}
   <!-- Hero lobby -->
   <section id="scr-lobby" class="screen" hidden>
     <div class="lobby-top">
+      <button id="btnMore" class="btn more" aria-label="More">•••</button>
       <img id="lobbyHero" class="px" alt="">
       <img id="lobbyPet" class="px" alt="" hidden>
       <div>
         <h2 id="lobbyName"></h2>
-        <div id="lobbyLvl"></div>
-        <div id="lobbyLvlDesc" class="muted"></div>
+        <div id="lobbyStars"></div>
         <div class="wallet" id="wallet"></div>
       </div>
     </div>
-    <button id="btnPlay" class="btn primary" style="font-size:22px;min-height:60px" data-i18n="enter"></button>
     <div class="tabs" id="lobbyTabs" role="tablist">
+      <button class="btn tab" role="tab" data-tab="map"><img id="tabMap" class="px" alt=""><span data-i18n="tabMap"></span></button>
       <button class="btn tab" role="tab" data-tab="village"><img id="tabVillage" class="px" alt=""><span data-i18n="tabVillage"></span></button>
       <button class="btn tab" role="tab" data-tab="skin"><img id="tabSkin" class="px" alt=""><span data-i18n="tabSkins"></span></button>
       <button class="btn tab" role="tab" data-tab="pet"><img id="tabPet" class="px" alt=""><span data-i18n="pets"></span></button>
-      <button class="btn tab" role="tab" data-tab="more"><span class="dots" aria-hidden="true">•••</span><span data-i18n="tabMore"></span></button>
     </div>
     <div class="panes" id="panes">
-      <div class="pane" data-pane="village" role="tabpanel">
+      <div class="pane" data-pane="map" role="tabpanel">
+        <div class="map" id="map"><canvas id="mapCv" width="120" height="320"></canvas></div>
+      </div>
+      <div class="pane" data-pane="village" role="tabpanel" hidden>
         <div class="card">
           <canvas id="villageCv" class="village" width="128" height="96"></canvas>
           <div id="buildings" class="wardrobe"></div>
@@ -386,8 +404,8 @@ const I18N = {
     s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Adding is easy, now taking away, ages 6–7',
     s3: 'Math whiz', s3d: 'Times tables, ages 8+', cancel: 'Cancel', create: 'Create hero',
     del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
-    enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', builtCount: 'Buildings',
-    wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabMore: 'More', tabVillage: 'Village', villageNote: 'Monsters drop wood, chests stone, dragons crystals. Some buildings help you in the dungeon: tap one to see.',
+    bestRoom: 'Best room', bestStreak: 'Best streak', builtCount: 'Buildings',
+    wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabVillage: 'Village', tabMap: 'Map', villageNote: 'Monsters drop wood, chests stone, dragons crystals. Some buildings help you in the dungeon: tap one to see.',
     bldBonus: [null, null, null, 'Start each game with one more potion, and carry one more.', null, 'Start each game with one more heart.', 'Monsters drop one more wood.', 'A shield: your first mistake in each game costs no heart.', 'Chests give one more wood and one more stone.', 'Professor Hoot gives you a potion.', null, 'Dragons drop one more crystal.'],
     bonus: 'Bonus', shieldUsed: 'The forge shield saves your heart!',
     bldNames: ['Campfire', 'Tent', 'Hut', 'Well', 'Garden', 'Bakery', 'Windmill', 'Forge', 'Market', 'Owl tower', 'Fountain', 'Castle'],
@@ -398,7 +416,7 @@ const I18N = {
     special: 'Special', close: 'Close',
     req: (k, n, o, m) => ({ built: n > 1 ? `Build ${n} buildings in your village.` : 'Build your first building in the village.', clear: `Beat the dragon at level ${o} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row at level ${m} or higher.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
     progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
-    lvTitle: 'Puzzle level (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
+    lvTitle: 'Levels open on the map (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
     level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`, dragonNear: 'The dragon waits behind the next door!',
     cleared: n => `Level ${n} cleared!`,
     lvDesc: ['Adding, up to 10', 'Adding, totals 8 to 15', 'Adding, totals 10 to 20', 'Taking away, within 10', 'Times, up to 5 × 5', 'Times, up to 5 × 10', 'Times tables, up to 10 × 10', 'Dividing by 2 to 5', 'Dividing by 2 to 10', 'Champion mix: + − × ÷'],
@@ -419,11 +437,14 @@ const I18N = {
     answerWas: (a, to) => (to ? 'Time’s up! ' : 'Oops! ') + `The answer was ${a}.`,
     napTitle: 'Your hero needs a nap!', napBody: (r, s) => `You explored ${r} rooms and solved ${s} puzzles. You keep half your bag:`,
     floorCleared: n => `Floor ${n} cleared!`, bag: 'In your bag:',
-    stopOrMore: 'Go home to keep it all, or go deeper: each floor gives more. If you run out of hearts you lose half your bag.',
-    goHome: 'Go home with my bag', goSame: n => `Stay on level ${n}`, goHarder: (n, d) => `Go up to level ${n}: ${d}`,
-    floorSame: n => `Floor ${n}: same puzzles!`, floorStart: n => `Level ${n}: new puzzles!`,
+    stopOrMore: 'Go back to the map to keep it all, or stay and go deeper: each floor gives more. If you run out of hearts you lose half your bag.',
+    goHome: 'Back to the map', goSame: n => `Stay on level ${n}, go deeper`,
+    floorSame: n => `Floor ${n}: same puzzles!`,
+    stars: n => `${n} ★ of 30`, play: 'Play!', biomes: ['Meadow', 'Meadow', 'Meadow', 'Forest', 'Hills', 'Hills', 'Hills', 'Mountains', 'Mountains', 'Volcano'],
+    firstWin: 'First win:', starsNote: 'Win again for stars: stars 2 and 3 give bonus materials.', allStars: 'All 3 stars won!',
+    lockedLv: n => `Beat the dragon at level ${n} to open this one.`, starBonus: n => `Star ${n}! Bonus:`, newLevel: n => `Level ${n} is open on the map!`,
     homeTitle: 'Welcome home!', homeBody: r => `You explored ${r} rooms and brought back:`, ok: 'OK',
-    playAgain: 'Play again', backHero: 'Back to my hero', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'),
+    playAgain: 'Play again', backHero: 'Back to the map', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'),
     statsTitle: n => `${n}’s stats`, answered: 'Puzzles answered', firstTry: 'Right first time', runs: 'Runs played', topLevel: 'Highest level',
     byOp: 'By type of puzzle', ops: { add: 'Adding', sub: 'Taking away', mul: 'Times', div: 'Dividing', miss: 'Missing number', mix: 'Mixed' },
     opLine: (n, avg) => `${n} puzzles` + (avg ? `, ${avg} s on average when right` : ''), practise: 'Needs practice',
@@ -441,8 +462,8 @@ const I18N = {
     s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Les additions, c’est facile : place aux soustractions, 6–7 ans',
     s3: 'As du calcul', s3d: 'Tables de multiplication, 8 ans et plus', cancel: 'Annuler', create: 'Créer',
     del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
-    enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', builtCount: 'Bâtiments',
-    wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabMore: 'Plus', tabVillage: 'Village', villageNote: 'Les monstres donnent du bois, les coffres de la pierre, les dragonnes des cristaux. Certains bâtiments t’aident dans le donjon : touche-les pour voir.',
+    bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', builtCount: 'Bâtiments',
+    wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabVillage: 'Village', tabMap: 'Carte', villageNote: 'Les monstres donnent du bois, les coffres de la pierre, les dragonnes des cristaux. Certains bâtiments t’aident dans le donjon : touche-les pour voir.',
     bldBonus: [null, null, null, 'Commence chaque partie avec une potion de plus, et porte une potion de plus.', null, 'Commence chaque partie avec un cœur de plus.', 'Les monstres donnent un bois de plus.', 'Un bouclier : ta première erreur de chaque partie ne coûte pas de cœur.', 'Les coffres donnent un bois et une pierre de plus.', 'Professeure Chouette te donne une potion.', null, 'Les dragonnes donnent un cristal de plus.'],
     bonus: 'Bonus', shieldUsed: 'Le bouclier de la forge protège ton cœur !',
     bldNames: ['Feu de camp', 'Tente', 'Cabane', 'Puits', 'Potager', 'Boulangerie', 'Moulin', 'Forge', 'Marché', 'Tour de la chouette', 'Fontaine', 'Château'],
@@ -453,7 +474,7 @@ const I18N = {
     special: 'Spécial', close: 'Fermer',
     req: (k, n, o, m) => ({ built: n > 1 ? `Construis ${n} bâtiments dans ton village.` : 'Construis ton premier bâtiment au village.', clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée au niveau ${m} ou plus.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
     progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
-    lvTitle: 'Niveau des calculs (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
+    lvTitle: 'Niveaux ouverts sur la carte (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
     level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`, dragonNear: 'La dragonne attend derrière la prochaine porte !',
     cleared: n => `Niveau ${n} réussi !`,
     lvDesc: ['Additions jusqu’à 10', 'Additions, résultats de 8 à 15', 'Additions, résultats de 10 à 20', 'Soustractions jusqu’à 10', 'Multiplications jusqu’à 5 × 5', 'Multiplications jusqu’à 5 × 10', 'Tables jusqu’à 10 × 10', 'Divisions par 2 à 5', 'Divisions par 2 à 10', 'Grand mélange : + − × ÷'],
@@ -474,11 +495,14 @@ const I18N = {
     answerWas: (a, to) => (to ? 'Temps écoulé ! ' : 'Oups ! ') + `La réponse était ${a}.`,
     napTitle: 'C’est l’heure de la sieste !', napBody: (r, s) => `Tu as exploré ${r} salles et résolu ${s} calculs. Tu gardes la moitié de ton sac :`,
     floorCleared: n => `Étage ${n} terminé !`, bag: 'Dans ton sac :',
-    stopOrMore: 'Rentre pour tout garder, ou descends : chaque étage rapporte plus. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
-    goHome: 'Rentrer avec mon sac', goSame: n => `Rester au niveau ${n}`, goHarder: (n, d) => `Passer au niveau ${n} : ${d}`,
-    floorSame: n => `Étage ${n} : mêmes calculs !`, floorStart: n => `Niveau ${n} : nouveaux calculs !`,
+    stopOrMore: 'Retourne à la carte pour tout garder, ou reste et descends : chaque étage rapporte plus. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
+    goHome: 'Retour à la carte', goSame: n => `Rester au niveau ${n}, descendre`,
+    floorSame: n => `Étage ${n} : mêmes calculs !`,
+    stars: n => `${n} ★ sur 30`, play: 'Jouer !', biomes: ['Prairie', 'Prairie', 'Prairie', 'Forêt', 'Collines', 'Collines', 'Collines', 'Montagnes', 'Montagnes', 'Volcan'],
+    firstWin: 'Première victoire :', starsNote: 'Gagne encore pour les étoiles : les étoiles 2 et 3 donnent des matériaux en bonus.', allStars: 'Les 3 étoiles sont gagnées !',
+    lockedLv: n => `Bats la dragonne au niveau ${n} pour ouvrir celui-ci.`, starBonus: n => `Étoile ${n} ! Bonus :`, newLevel: n => `Le niveau ${n} est ouvert sur la carte !`,
     homeTitle: 'Bienvenue à la maison !', homeBody: r => `Tu as exploré ${r} salles et rapporté :`, ok: 'OK',
-    playAgain: 'Rejouer', backHero: 'Retour à mon personnage', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'),
+    playAgain: 'Rejouer', backHero: 'Retour à la carte', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'),
     statsTitle: n => `Stats de ${n}`, answered: 'Calculs faits', firstTry: 'Justes du premier coup', runs: 'Parties jouées', topLevel: 'Niveau max',
     byOp: 'Par type de calcul', ops: { add: 'Additions', sub: 'Soustractions', mul: 'Multiplications', div: 'Divisions', miss: 'Nombre manquant', mix: 'Calculs mélangés' },
     opLine: (n, avg) => `${n} calculs` + (avg ? `, ${avg} s en moyenne quand c’est juste` : ''), practise: 'À travailler',
@@ -623,6 +647,7 @@ const SPR = {
   wood: ["........", ".BBBBBRR", "BLLLLRYR", "BBBBBBRR", ".BBBBBRR", "BLLLLRYR", "BBBBBBRR", "........"],
   stone: ["........", "..GGGG..", ".GLLLGG.", "GLLGGGDG", "GGGGGDDG", "GGGDDDDG", ".GDDDDG.", "........"],
   gem: ["...CC...", "..CLLC..", ".CLLCCC.", "CLLCCCDC", ".CCCCDC.", "..CCDC..", "...DC...", "........"],
+  map: ["........", ".PPPPPP.", ".PGGRGP.", ".PGRGGP.", ".PRGGXP.", ".PGGGGP.", ".PPPPPP.", "........"],
   bag: ["...TT...", "..BTTB..", ".BBBBBB.", "BBLBBBBB", "BLBBBBBB", "BBBBBBBB", ".BBBBBB.", "........"],
   flame: ["..R..", ".RR..", ".RYR.", "RYYR.", "RYWYR", "RYYYR", ".RRR."],
 };
@@ -640,6 +665,7 @@ const PAL = {
   wood: { B: '#8a5a2b', L: '#b07a40', R: '#d9a066', Y: '#8a5a2b' },
   stone: { G: '#9aa0b0', L: '#c8ccd8', D: '#6b7080' },
   gem: { C: '#4fd1e8', L: '#c8f6ff', D: '#2a8fb0' },
+  map: { P: '#f4ead2', G: '#7bc86c', R: '#c98a4a', X: '#e04848' },
   bag: { T: '#5a3a22', B: '#c08850', L: '#e0b080' },
   flame: { R: '#ff7a2f', Y: '#ffc83d', W: '#fff6c8' },
 };
@@ -1030,7 +1056,7 @@ document.querySelectorAll('#startSeg .btn').forEach(b => b.addEventListener('cli
 $('#btnCreate').addEventListener('click', () => {
   const name = $('#nameIn').value.trim();
   if (!name) { $('#nameIn').classList.add('shake'); $('#nameIn').placeholder = t('nameNeeded'); setTimeout(() => $('#nameIn').classList.remove('shake'), 300); $('#nameIn').focus(); return; }
-  const p = migrate({ id: 'h' + Date.now().toString(36), name, skin: 0, unlocked: [0], rating: startRating, bestRoom: 0, bestStreak: 0, gold: 0 });
+  const p = migrate({ id: 'h' + Date.now().toString(36), name, skin: 0, unlocked: [0], rating: startRating, start: startRating, bestRoom: 0, bestStreak: 0, gold: 0 });
   stats(p);
   store.profiles.push(p); store.lastId = p.id; save();
   P = p; renderLobby(); show('scr-lobby');
@@ -1057,6 +1083,8 @@ function migrate(p) {
     p.wallet = 0; p.boosts = { heart: false, potion: false };
   }
   if (!Array.isArray(p.built)) p.built = [];
+  if (!p.wins) p.wins = {};       // dragon wins per level: stars on the map
+  if (p.start == null) p.start = p.rating; // levels open on the map without a win (start choice or grown-up setting)
   p.rating = clamp(Math.floor(p.rating), 1, 10);
   return p;
 }
@@ -1116,20 +1144,103 @@ function openInfo(kind, i) {
   nodes.push(btn(t('close'), '', closeModal));
   modal(nodes); $('#modalCard').classList.add('info');
 }
+/* ================= map ================= */
+const openTo = () => clamp(Math.max(P.start, ...P.clears.map(c => c + 1)), 1, 10);
+const starsOf = lv => Math.min(P.wins[lv] || 0, 3);
+const tierOf = lv => 1 + Math.floor((lv - 1) / 3);
+// winning again at a level: stars 2 and 3 give a small bonus, banked right away
+const STAR_BONUS = { 2: { wood: 3, stone: 2 }, 3: { stone: 3, gem: 1 } };
+const MAP_H = 320, NODE = i => ({ x: Math.round(60 + 34 * Math.sin(i * 1.15)), y: MAP_H - 34 - i * 30 });
+const BIOME = [ // from level n up: ground, dots, decoration
+  [1, '#7bc86c', '#8fd67e', 'flower'], [4, '#4f9e57', '#3f8a49', 'tree'], [5, '#c9a26b', '#b08a55', 'rock'],
+  [8, '#dfe7f2', '#c8d2e0', 'peak'], [10, '#7a3328', '#5e251d', 'lava']];
+function biomeOf(lv) { let b = BIOME[0]; for (const x of BIOME) if (lv >= x[0]) b = x; return b; }
+function drawMap() {
+  const c = $('#mapCv').getContext('2d'), rr = mulberry(11);
+  // bands: each level owns the strip around its node
+  for (let lv = 1; lv <= 10; lv++) {
+    const y0 = lv === 10 ? 0 : NODE(lv - 1).y - 15, y1 = lv === 1 ? MAP_H : NODE(lv - 1).y + 15, b = biomeOf(lv);
+    c.fillStyle = b[1]; c.fillRect(0, y0, 120, y1 - y0);
+    for (let k = 0; k < 14; k++) { c.fillStyle = b[2]; c.fillRect(rr() * 120 | 0, y0 + rr() * (y1 - y0) | 0, 2, 1); }
+    for (let k = 0; k < 4; k++) {
+      let x = rr() * 112 | 0; const y = y0 + 4 + (rr() * Math.max(1, y1 - y0 - 12) | 0), n = NODE(lv - 1);
+      if (Math.abs(x - n.x) < 22) x = (x + 60) % 112;
+      if (b[3] === 'flower') { c.fillStyle = ['#ff8fb1', '#ffd84d', '#ffffff'][k % 3]; c.fillRect(x, y, 2, 2); c.fillStyle = '#3f9e4f'; c.fillRect(x, y + 2, 1, 2); }
+      if (b[3] === 'tree') { c.fillStyle = '#5a3a22'; c.fillRect(x + 3, y + 6, 2, 3); c.fillStyle = '#2f6e3a'; c.fillRect(x, y + 2, 8, 5); c.fillRect(x + 1, y, 6, 8); }
+      if (b[3] === 'rock') { c.fillStyle = '#8a7a6a'; c.fillRect(x, y + 2, 7, 4); c.fillRect(x + 1, y + 1, 4, 1); c.fillStyle = '#a89888'; c.fillRect(x + 1, y + 2, 2, 1); }
+      if (b[3] === 'peak') { for (let i = 0; i < 6; i++) { c.fillStyle = i < 2 ? '#ffffff' : '#8a97a8'; c.fillRect(x + 6 - i, y + i, 2 * i + 1, 1); } }
+      if (b[3] === 'lava') { c.fillStyle = '#ff7a2f'; c.fillRect(x, y + 3, 6, 2); c.fillStyle = '#ffc83d'; c.fillRect(x + 2, y + 3, 2, 1); }
+    }
+  }
+  // volcano at the very top
+  c.fillStyle = '#4a2a24'; for (let i = 0; i < 12; i++) c.fillRect(84 - i * 2, 4 + i, 6 + i * 4, 1);
+  c.fillStyle = '#ff7a2f'; c.fillRect(85, 2, 4, 3); c.fillStyle = '#ffc83d'; c.fillRect(86, 1, 2, 2);
+  // the path, from the village to the volcano
+  const pts = [{ x: 60, y: MAP_H }, ...Array.from({ length: 10 }, (_, i) => NODE(i))];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 3);
+    for (let k = 0; k < n; k++) {
+      const x = a.x + (b.x - a.x) * k / n, y = a.y + (b.y - a.y) * k / n;
+      c.fillStyle = i - 1 < openTo() ? '#f4e2b0' : '#9a8f86'; c.fillRect(x - 1 | 0, y - 1 | 0, 3, 3);
+    }
+  }
+  // the village at the start of the path
+  c.drawImage(bldTile(P.built.length ? P.built[P.built.length - 1] : 2, !P.built.length), 34, MAP_H - 22);
+}
+function renderMap() {
+  drawMap();
+  const box = $('#map'); box.querySelectorAll('.node,.me').forEach(n => n.remove());
+  const top = openTo();
+  for (let lv = 1; lv <= 10; lv++) {
+    const n = NODE(lv - 1), st = starsOf(lv), lock = lv > top;
+    const b = btn(String(lv), 'node ' + (lock ? 'lock' : st ? 'done' : 'open') + (P.newLv === lv ? ' new' : ''), () => { sfx('tap'); openLevel(lv); });
+    b.style.left = (n.x / 120 * 100) + '%'; b.style.top = (n.y / MAP_H * 100) + '%';
+    b.setAttribute('aria-label', t('level', lv));
+    if (!lock) b.appendChild(el('span', 'st', '★'.repeat(st) + '☆'.repeat(3 - st)));
+    box.appendChild(b);
+  }
+  const me = el('img', 'px me'), n = NODE(clamp(level(), 1, top) - 1);
+  me.src = spriteURL(SPR.hero, heroPal(P.skin), 3); me.alt = '';
+  me.style.left = ((n.x + 15) / 120 * 100) + '%'; me.style.top = ((n.y + 10) / MAP_H * 100) + '%';
+  box.appendChild(me);
+}
+function scrollMapToHero() {
+  const n = NODE(clamp(level(), 1, openTo()) - 1), map = $('#map'), panes = $('#panes');
+  panes.scrollTop = map.offsetTop + map.clientHeight * n.y / MAP_H - panes.clientHeight / 2;
+}
+function openLevel(lv) {
+  const nodes = [el('h2', null, t('level', lv)), el('p', 'muted', t('biomes')[lv - 1]), el('p', 'req', t('lvDesc')[lv - 1])];
+  if (lv > openTo()) nodes.push(el('p', null, t('lockedLv', lv - 1)));
+  else {
+    const st = starsOf(lv);
+    nodes.push(el('div', 'stars', '★'.repeat(st) + '☆'.repeat(3 - st)));
+    // first-win reward of this level, if it has one
+    const rw = [['skin', SKINS], ['pet', PETS]].map(([k, list]) => [k, list.findIndex(it => it.req && it.req[0] === 'clear' && it.req[2] === lv)]).find(([, i]) => i >= 0);
+    if (rw && !P.clears.includes(lv)) {
+      const row = el('div', 'rw'); row.append(el('span', null, t('firstWin')), itemImg(rw[0], rw[1], false, rw[0] === 'skin' ? 3 : 4)); nodes.push(row);
+    }
+    nodes.push(el('p', 'muted', st >= 3 ? t('allStars') : t('starsNote')));
+    nodes.push(btn(t('play'), 'primary', () => { closeModal(); if (P.newLv === lv) P.newLv = 0; P.rating = lv; save(); sfx('door'); startRun(); }));
+  }
+  nodes.push(btn(t('close'), '', closeModal));
+  modal(nodes); $('#modalCard').classList.add('lvcard');
+}
+$('#btnMore').addEventListener('click', () => { sfx('tap'); setTab('more'); });
+
 /* ================= lobby ================= */
 function renderLobby() {
   migrate(P);
   $('#lobbyHero').src = spriteURL(SPR.hero, heroPal(P.skin), 8);
   $('#lobbyName').textContent = P.name;
-  const lv = level();
-  $('#lobbyLvl').textContent = t('level', lv);
-  $('#lobbyLvlDesc').textContent = t('lvDesc')[lv - 1];
+  const top = openTo();
+  $('#lobbyStars').textContent = t('stars', Array.from({ length: 10 }, (_, i) => starsOf(i + 1)).reduce((a, b) => a + b, 0));
   $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.built.length;
-  $('#lvVal').textContent = lv; $('#lvDesc').textContent = t('lvDesc')[lv - 1];
+  $('#lvVal').textContent = top; $('#lvDesc').textContent = t('lvDesc')[top - 1];
   $('#wallet').replaceChildren(matsRow(P.mats, false, P.mats));
   const lp = $('#lobbyPet');
   if (P.pet >= 0) { lp.src = spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 5); lp.hidden = false; } else lp.hidden = true;
-  renderVillage(); renderShop('skin'); renderShop('pet');
+  renderMap(); renderVillage(); renderShop('skin'); renderShop('pet');
+  $('#tabMap').src = ICON.map;
   $('#tabSkin').src = spriteURL(SPR.hero, heroPal(P.skin), 3);
   $('#tabPet').src = P.pet >= 0 ? spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 3) : spriteURL(PETS[0].spr, PETS[0].pal, 3);
   $('#tabVillage').src = bldURL(2, 1, false);
@@ -1137,20 +1248,21 @@ function renderLobby() {
   for (const k of ['skin', 'pet']) $(`#lobbyTabs [data-tab=${k}]`).classList.toggle('new', P.fresh[k].length > 0);
   setTab(lobbyTab);
 }
-let lobbyTab = 'village';
+let lobbyTab = 'map';
 function setTab(k) {
   if (k !== lobbyTab) $('#panes').scrollTop = 0;
   lobbyTab = k;
   document.querySelectorAll('#lobbyTabs .tab').forEach(b => { b.classList.toggle('on', b.dataset.tab === k); b.setAttribute('aria-selected', b.dataset.tab === k); });
   document.querySelectorAll('#panes .pane').forEach(p => { p.hidden = p.dataset.pane !== k; });
+  if (k === 'map') requestAnimationFrame(scrollMapToHero);
 }
 document.querySelectorAll('#lobbyTabs .tab').forEach(b => b.addEventListener('click', () => { sfx('tap'); setTab(b.dataset.tab); }));
-$('#lvDown').addEventListener('click', () => { P.rating = clamp(level() - 1, 1, 10); save(); renderLobby(); });
-$('#lvUp').addEventListener('click', () => { P.rating = clamp(level() + 1, 1, 10); save(); renderLobby(); });
+// grown-ups can open levels without the dragon; levels already won stay open
+$('#lvDown').addEventListener('click', () => { P.start = clamp(openTo() - 1, 1, 10); P.rating = Math.min(P.rating, openTo()); save(); renderLobby(); });
+$('#lvUp').addEventListener('click', () => { P.start = clamp(openTo() + 1, 1, 10); save(); renderLobby(); });
 $('#btnStats').addEventListener('click', () => { renderStats(); show('scr-stats'); });
 $('#btnStatsBack').addEventListener('click', () => { renderLobby(); show('scr-lobby'); });
 $('#btnSwitch').addEventListener('click', () => { renderTitle(); show('scr-title'); });
-$('#btnPlay').addEventListener('click', () => { sfx('door'); startRun(); });
 
 /* ================= canvas & fx ================= */
 const cv = $('#cv'), cx = cv.getContext('2d');
@@ -1490,7 +1602,7 @@ function resolveRight(ctx) {
         e.alive = false; fx.shake = now();
         burst(ENC.x, ENC.y, [e.kind === 'boss' ? '#ff7a45' : MONSTERS[e.sprite].col, '#ffffff'], 26);
         const got = e.kind === 'boss' ? { gem: dropMult() + (has(B.castle) ? 1 : 0), wood: 2 * dropMult(), stone: dropMult() } : { wood: 2 * dropMult() + (has(B.windmill) ? 1 : 0) };
-        if (e.kind === 'boss') { P.dragons++; if (!P.clears.includes(runLevel())) { P.clears.push(runLevel()); later(() => toast(t('cleared', runLevel()), 'flame'), 300); } later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten'), 'heart'); sfx('win'); }
+        if (e.kind === 'boss') { P.dragons++; winLevel(runLevel()); later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten'), 'heart'); sfx('win'); }
         else sfx('coin');
         loot(got);
         save(); hud();
@@ -1639,7 +1751,21 @@ function renderStats() {
 
 /* ================= end & menu ================= */
 function modal(nodes) { $('#modalCard').replaceChildren(...nodes); $('#modal').hidden = false; }
-function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.remove('info'); }
+function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.remove('info', 'lvcard'); }
+function winLevel(lv) {
+  const wins = P.wins[lv] = (P.wins[lv] || 0) + 1;
+  if (!P.clears.includes(lv)) {
+    const before = openTo(); P.clears.push(lv);
+    later(() => toast(t('cleared', lv), 'flame'), 300);
+    if (openTo() > before) { P.newLv = openTo(); later(() => toast(t('newLevel', openTo()), 'map'), 2200); }
+  }
+  const bonus = STAR_BONUS[wins];
+  if (bonus) {
+    const got = Object.fromEntries(Object.entries(bonus).map(([m, n]) => [m, n * tierOf(lv)]));
+    for (const m of MATS) P.mats[m] = (P.mats[m] || 0) + (got[m] || 0);
+    later(() => { toast(t('starBonus', wins), 'flame'); for (const m of MATS) if (got[m]) toast('+' + got[m], m); }, 2200);
+  }
+}
 function seenLevel() { const st = stats(P); st.maxLv = Math.max(st.maxLv || 0, level()); P.maxLv = Math.max(P.maxLv || 0, level()); }
 // deeper floors and higher levels give more: +1 per floor, +1 per three levels
 const dropMult = () => R.floor + Math.floor((runLevel() - 1) / 3);
@@ -1652,12 +1778,9 @@ function floorCleared() {
     el('h2', null, t('floorCleared', R.floor)),
     el('p', null, t('bag')), matsRow(R.bag, false, R.bag),
     el('p', null, t('stopOrMore')),
-    ...(runLevel() < 10 ? [btn(t('goHarder', runLevel() + 1, t('lvDesc')[runLevel()]), 'primary', () => {
-      closeModal(); R.floor++; P.rating = runLevel() + 1; R.potions = Math.min(R.potions, potionCap()); seenLevel(); save(); hud(); toast(t('floorStart', runLevel()), 'flame'); showDoors();
-    })] : []),
-    btn(t('goSame', runLevel()), '', () => { closeModal(); R.floor++; hud(); toast(t('floorSame', R.floor), 'flame'); showDoors(); }),
+    btn(t('goSame', runLevel()), 'primary', () => { closeModal(); R.floor++; hud(); toast(t('floorSame', R.floor), 'flame'); showDoors(); }),
     btn(t('goHome'), 'gold', () => {
-      closeModal(); const g = R.bag, r = R.depth; bank(g); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby');
+      closeModal(); const g = R.bag, r = R.depth; bank(g); endRun(); R.over = true; R = null; lobbyTab = 'map'; renderLobby(); show('scr-lobby');
       modal([el('h2', null, t('homeTitle')), el('p', null, t('homeBody', r)), matsRow(g, false, g), btn(t('ok'), 'primary', closeModal)]);
     }),
   ]);
@@ -1671,7 +1794,7 @@ function gameOver() {
     el('h2', null, t('napTitle')),
     el('p', null, t('napBody', R.depth, R.solved)), matsRow(kept, false, kept),
     btn(t('playAgain'), 'primary', () => { closeModal(); startRun(); }),
-    btn(t('backHero'), '', () => { closeModal(); R = null; renderLobby(); show('scr-lobby'); }),
+    btn(t('backHero'), '', () => { closeModal(); R = null; lobbyTab = 'map'; renderLobby(); show('scr-lobby'); }),
   ]);
 }
 function pause() {
@@ -1721,7 +1844,7 @@ ICON.potion = spriteURL(SPR.potion, PAL.potion, 3);
 ICON.coin = spriteURL(SPR.coin, PAL.coin, 3);
 ICON.flame = spriteURL(SPR.flame, PAL.flame, 3);
 ICON.dragon = spriteURL(SPR.dragon, PAL.dragon, 2);
-for (const m of [...MATS, 'bag']) ICON[m] = spriteURL(SPR[m], PAL[m], 3);
+for (const m of [...MATS, 'bag', 'map']) ICON[m] = spriteURL(SPR[m], PAL[m], 3);
 $('#icoPotion').src = ICON.potion; $('#icoBag').src = ICON.bag; $('#icoFlame').src = ICON.flame;
 load();
 applyLang();
