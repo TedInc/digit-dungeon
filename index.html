@@ -119,13 +119,14 @@ input[type=text]{
 .map{position:relative;border:3px solid var(--edge);border-radius:10px;overflow:hidden;box-shadow:0 4px 0 var(--shadow)}
 .map canvas{display:block;width:100%;height:auto}
 .node{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;min-height:0;padding:0;border-radius:50%;
-  font-family:var(--read);font-size:22px;font-weight:600;display:grid;place-items:center}
+  font-family:var(--read);font-size:19px;font-weight:600;display:grid;place-items:center}
 .node.done{background:var(--gold);color:#2b2240}
 .node.open{background:var(--primary);color:#fff}
 .node.lock{background:#6a5a86;color:#d8cfee;box-shadow:0 3px 0 var(--shadow)}
 .node .st{position:absolute;top:43px;left:50%;transform:translateX(-50%);font-size:17px;line-height:1;letter-spacing:0;color:#ffc83d;
   text-shadow:0 0 2px #2b2240,0 0 2px #2b2240;white-space:nowrap}
 .node.new{animation:glow 1.2s ease-in-out infinite alternate}
+.map .wtag{position:absolute;transform:translateY(-50%);background:rgba(43,34,64,.75);color:#fff;font-family:var(--pixel);font-size:14px;padding:2px 8px;border-radius:6px;pointer-events:none;white-space:nowrap}
 .map .me{position:absolute;width:36px;height:36px;transform:translate(-50%,-100%);pointer-events:none}
 @media (prefers-reduced-motion: reduce){.node.new{animation:none;box-shadow:0 4px 0 var(--shadow),0 0 0 3px var(--gold)}}
 .lvcard .stars{font-size:28px;color:var(--gold);letter-spacing:2px;text-shadow:0 2px 0 var(--edge)}
@@ -271,8 +272,8 @@ h3{margin:0 0 8px;font-size:18px}
       <p class="label" data-i18n="whereStart"></p>
       <div class="seg" id="startSeg">
         <button class="btn on" data-r="1"><span data-i18n="s1"></span><small data-i18n="s1d"></small></button>
-        <button class="btn" data-r="4"><span data-i18n="s2"></span><small data-i18n="s2d"></small></button>
-        <button class="btn" data-r="7"><span data-i18n="s3"></span><small data-i18n="s3d"></small></button>
+        <button class="btn" data-r="6"><span data-i18n="s2"></span><small data-i18n="s2d"></small></button>
+        <button class="btn" data-r="11"><span data-i18n="s3"></span><small data-i18n="s3d"></small></button>
       </div>
       <div class="row">
         <button id="btnCancel" class="btn" data-i18n="cancel"></button>
@@ -301,7 +302,7 @@ h3{margin:0 0 8px;font-size:18px}
     </div>
     <div class="panes" id="panes">
       <div class="pane" data-pane="map" role="tabpanel">
-        <div class="map" id="map"><canvas id="mapCv" width="120" height="320"></canvas></div>
+        <div class="map" id="map"><canvas id="mapCv" width="120" height="794"></canvas></div>
       </div>
       <div class="pane" data-pane="village" role="tabpanel" hidden>
         <div class="card">
@@ -403,7 +404,7 @@ const I18N = {
     whereStart: 'Where should the puzzles start?',
     s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Adding is easy, now taking away, ages 6–7',
     s3: 'Math whiz', s3d: 'Times tables, ages 8+', cancel: 'Cancel', create: 'Create hero',
-    del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
+    del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `${lvName(lv)}, best room ${r}`,
     bestRoom: 'Best room', bestStreak: 'Best streak', builtCount: 'Buildings',
     wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabVillage: 'Village', tabMap: 'Map', villageNote: 'Monsters drop wood, chests stone, dragons crystals. Some buildings help you in the dungeon: tap one to see.',
     bldBonus: [null, null, null, 'Start each game with one more potion, and carry one more.', null, 'Start each game with one more heart.', 'Monsters drop one more wood.', 'A shield: your first mistake in each game costs no heart.', 'Chests give one more wood and one more stone.', 'Professor Hoot gives you a potion.', null, 'Dragons drop one more crystal.'],
@@ -414,12 +415,15 @@ const I18N = {
     pets: 'Pets', petNote: 'A pet follows you in the dungeon. Pets are won with achievements: tap one to see how.', noPet: 'No pet',
     petNames: ['Chick', 'Cat', 'Puppy', 'Bunny', 'Frog', 'Ghost', 'Baby dragon', 'Owlet', 'Turtle', 'Fox', 'Penguin', 'Blue slime', 'Unicorn'],
     special: 'Special', close: 'Close',
-    req: (k, n, o, m) => ({ built: n > 1 ? `Build ${n} buildings in your village.` : 'Build your first building in the village.', clear: `Beat the dragon at level ${o} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row at level ${m} or higher.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
+    req: (k, n, o, m) => ({ built: n > 1 ? `Build ${n} buildings in your village.` : 'Build your first building in the village.', clear: `Beat the dragon at ${lvName(o)} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row, from ${lvName(m)} on.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
     progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
     lvTitle: 'Levels open on the map (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
     level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`, dragonNear: 'The dragon waits behind the next door!',
-    cleared: n => `Level ${n} cleared!`,
-    lvDesc: ['Adding, up to 10', 'Adding, totals 8 to 15', 'Adding, totals 10 to 20', 'Taking away, within 10', 'Times, up to 5 × 5', 'Times, up to 5 × 10', 'Times tables, up to 10 × 10', 'Dividing by 2 to 5', 'Dividing by 2 to 10', 'Champion mix: + − × ÷'],
+    cleared: n => `${n} cleared!`,
+    worlds: ['Meadow', 'Forest', 'Hills', 'Mountains', 'Volcano'], opNames: ['Adding', 'Taking away', 'Times', 'Dividing', 'Mix'],
+    nums: [['numbers 0 to 5', 'numbers 0 to 10'], ['from 5 or less', 'from 10 or less'], ['up to 5 × 5', 'up to 10 × 10'], ['by 1 to 5', 'by 1 to 10'], ['small numbers', 'numbers up to 10']],
+    modes: ['choices, no timer', 'choices, no timer', 'choices, 15 s timer', 'type the answer, 20 s', 'type the answer, 10 s'],
+    dragonModes: ['typed, no timer', 'typed, no timer', 'typed, 20 s', 'typed, 20 s', 'typed, 10 s'], dragonLbl: 'Dragon: ',
     skins: ['Knight', 'Ranger', 'Wizard', 'Pirate', 'Dwarf', 'Star hero', 'Ninja', 'Royal', 'Robot', 'Viking', 'Astronaut', 'Fairy', 'Ice mage', 'Champion'],
     mon: { slime: 'A wobbly slime', bat: 'A sleepy bat', goblin: 'A grumpy goblin' },
     monIntro: n => `${n} blocks the way! Solve it to zap it.`,
@@ -440,9 +444,9 @@ const I18N = {
     stopOrMore: 'Go back to the map to keep it all, or stay and go deeper: each floor gives more. If you run out of hearts you lose half your bag.',
     goHome: 'Back to the map', goSame: n => `Stay on level ${n}, go deeper`,
     floorSame: n => `Floor ${n}: same puzzles!`,
-    stars: n => `${n} ★ of 30`, play: 'Play!', biomes: ['Meadow', 'Meadow', 'Meadow', 'Forest', 'Hills', 'Hills', 'Hills', 'Mountains', 'Mountains', 'Volcano'],
+    stars: n => `${n} ★ of 75`, play: 'Play!',
     firstWin: 'First win:', starsNote: 'Win again for stars: stars 2 and 3 give bonus materials.', allStars: 'All 3 stars won!',
-    lockedLv: n => `Beat the dragon at level ${n} to open this one.`, starBonus: n => `Star ${n}! Bonus:`, newLevel: n => `Level ${n} is open on the map!`,
+    lockedLv: n => `Beat the dragon at ${n} to open this one.`, and: ' and ', starBonus: n => `Star ${n}! Bonus:`, newLevel: n => `${n} is open on the map!`,
     homeTitle: 'Welcome home!', homeBody: r => `You explored ${r} rooms and brought back:`, ok: 'OK',
     playAgain: 'Play again', backHero: 'Back to the map', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'),
     statsTitle: n => `${n}’s stats`, answered: 'Puzzles answered', firstTry: 'Right first time', runs: 'Runs played', topLevel: 'Highest level',
@@ -461,7 +465,7 @@ const I18N = {
     whereStart: 'Par où commencer ?',
     s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Les additions, c’est facile : place aux soustractions, 6–7 ans',
     s3: 'As du calcul', s3d: 'Tables de multiplication, 8 ans et plus', cancel: 'Annuler', create: 'Créer',
-    del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
+    del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `${lvName(lv)}, meilleure salle ${r}`,
     bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', builtCount: 'Bâtiments',
     wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabVillage: 'Village', tabMap: 'Carte', villageNote: 'Les monstres donnent du bois, les coffres de la pierre, les dragonnes des cristaux. Certains bâtiments t’aident dans le donjon : touche-les pour voir.',
     bldBonus: [null, null, null, 'Commence chaque partie avec une potion de plus, et porte une potion de plus.', null, 'Commence chaque partie avec un cœur de plus.', 'Les monstres donnent un bois de plus.', 'Un bouclier : ta première erreur de chaque partie ne coûte pas de cœur.', 'Les coffres donnent un bois et une pierre de plus.', 'Professeure Chouette te donne une potion.', null, 'Les dragonnes donnent un cristal de plus.'],
@@ -472,12 +476,15 @@ const I18N = {
     pets: 'Compagnons', petNote: 'Un compagnon te suit dans le donjon. Ils se gagnent avec des exploits : touche-en un pour savoir comment.', noPet: 'Aucun',
     petNames: ['Poussin', 'Chaton', 'Chiot', 'Lapin', 'Grenouille', 'Fantôme', 'Bébé dragon', 'Chouette', 'Tortue', 'Renarde', 'Pingouin', 'Gelée bleue', 'Licorne'],
     special: 'Spécial', close: 'Fermer',
-    req: (k, n, o, m) => ({ built: n > 1 ? `Construis ${n} bâtiments dans ton village.` : 'Construis ton premier bâtiment au village.', clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée au niveau ${m} ou plus.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
+    req: (k, n, o, m) => ({ built: n > 1 ? `Construis ${n} bâtiments dans ton village.` : 'Construis ton premier bâtiment au village.', clear: `Bats la dragonne à ${lvName(o)} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée, à partir de ${lvName(m)}.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
     progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
     lvTitle: 'Niveaux ouverts sur la carte (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
     level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`, dragonNear: 'La dragonne attend derrière la prochaine porte !',
-    cleared: n => `Niveau ${n} réussi !`,
-    lvDesc: ['Additions jusqu’à 10', 'Additions, résultats de 8 à 15', 'Additions, résultats de 10 à 20', 'Soustractions jusqu’à 10', 'Multiplications jusqu’à 5 × 5', 'Multiplications jusqu’à 5 × 10', 'Tables jusqu’à 10 × 10', 'Divisions par 2 à 5', 'Divisions par 2 à 10', 'Grand mélange : + − × ÷'],
+    cleared: n => `${n} réussi !`,
+    worlds: ['Prairie', 'Forêt', 'Collines', 'Montagnes', 'Volcan'], opNames: ['Additions', 'Soustractions', 'Multiplications', 'Divisions', 'Mélange'],
+    nums: [['nombres de 0 à 5', 'nombres de 0 à 10'], ['en partant de 5 ou moins', 'en partant de 10 ou moins'], ['jusqu’à 5 × 5', 'jusqu’à 10 × 10'], ['par 1 à 5', 'par 1 à 10'], ['petits nombres', 'nombres jusqu’à 10']],
+    modes: ['choix, sans chrono', 'choix, sans chrono', 'choix, chrono 15 s', 'réponse à taper, 20 s', 'réponse à taper, 10 s'],
+    dragonModes: ['à taper, sans chrono', 'à taper, sans chrono', 'à taper, 20 s', 'à taper, 20 s', 'à taper, 10 s'], dragonLbl: 'Dragonne : ',
     skins: ['Chevalière', 'Archère', 'Magicienne', 'Pirate', 'Naine', 'Étoile', 'Ninja', 'Reine', 'Robot', 'Viking', 'Astronaute', 'Fée', 'Mage des glaces', 'Championne'],
     mon: { slime: 'Une gelée toute molle', bat: 'Une chauve-souris endormie', goblin: 'Un gobelin grognon' },
     monIntro: n => `${n} bloque le passage ! Résous le calcul pour passer.`,
@@ -498,9 +505,9 @@ const I18N = {
     stopOrMore: 'Retourne à la carte pour tout garder, ou reste et descends : chaque étage rapporte plus. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
     goHome: 'Retour à la carte', goSame: n => `Rester au niveau ${n}, descendre`,
     floorSame: n => `Étage ${n} : mêmes calculs !`,
-    stars: n => `${n} ★ sur 30`, play: 'Jouer !', biomes: ['Prairie', 'Prairie', 'Prairie', 'Forêt', 'Collines', 'Collines', 'Collines', 'Montagnes', 'Montagnes', 'Volcan'],
+    stars: n => `${n} ★ sur 75`, play: 'Jouer !',
     firstWin: 'Première victoire :', starsNote: 'Gagne encore pour les étoiles : les étoiles 2 et 3 donnent des matériaux en bonus.', allStars: 'Les 3 étoiles sont gagnées !',
-    lockedLv: n => `Bats la dragonne au niveau ${n} pour ouvrir celui-ci.`, starBonus: n => `Étoile ${n} ! Bonus :`, newLevel: n => `Le niveau ${n} est ouvert sur la carte !`,
+    lockedLv: n => `Bats la dragonne à ${n} pour ouvrir celui-ci.`, and: ' et ', starBonus: n => `Étoile ${n} ! Bonus :`, newLevel: n => `${n} est ouvert sur la carte !`,
     homeTitle: 'Bienvenue à la maison !', homeBody: r => `Tu as exploré ${r} salles et rapporté :`, ok: 'OK',
     playAgain: 'Rejouer', backHero: 'Retour à la carte', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'),
     statsTitle: n => `Stats de ${n}`, answered: 'Calculs faits', firstTry: 'Justes du premier coup', runs: 'Parties jouées', topLevel: 'Niveau max',
@@ -672,33 +679,33 @@ const PAL = {
 const SKINS = [
   { H: '#c9d2e3', B: '#4f8cf0', L: '#2c4f9e', cost: 0 },
   { H: '#3f9e4f', B: '#7bd66a', L: '#6b4a2a', req: ['clear', 1, 1] },
-  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', req: ['built', 2] },
-  { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', req: ['clear', 1, 3] },
+  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', req: ['clear', 1, 3] },
+  { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', req: ['clear', 1, 5] },
   { H: '#e8892b', B: '#b5562b', L: '#5a3a22', req: ['streak', 10] },
-  { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 20, null, 7] },
-  { H: '#2b2240', B: '#46466e', L: '#2b2240', req: ['solved', 100] },
-  { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['clear', 1, 7] },
-  { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['clear', 1, 5] },
-  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', req: ['built', 6] },
-  { H: '#ffffff', B: '#dfe7f2', L: '#8a97a8', req: ['op', 100, 'mul'] },
+  { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 20, null, 11] },
+  { H: '#2b2240', B: '#46466e', L: '#2b2240', req: ['clear', 1, 7] },
+  { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['clear', 1, 15] },
+  { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['clear', 1, 11] },
+  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', req: ['clear', 1, 9] },
+  { H: '#ffffff', B: '#dfe7f2', L: '#8a97a8', req: ['clear', 1, 13] },
   { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', req: ['built', 12] },
-  { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['clear', 1, 9] },
+  { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['clear', 1, 17] },
   { H: '#ffd23f', B: '#ff4f6d', L: '#ffd23f', req: ['dragons', 20] },
 ];
 const PETS = [
   { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, req: ['built', 1] },
   { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'OOPPOO.O', '.OOOO..O', '.OOOOOOO', '.O.O.O..'], pal: { O: '#ff9f43', E: '#2b2240', P: '#ff8fb1' }, req: ['clear', 1, 2] },
-  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, req: ['solved', 50] },
+  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, req: ['clear', 1, 6] },
   { spr: ['.W..W...', '.WP.WP..', '.W..W...', 'WWWWWW..', 'WEWWEW..', 'WWPPWW..', '.WWWW.W.', '.W..W...'], pal: { W: '#f4f0ff', P: '#ff8fb1', E: '#2b2240' }, req: ['clear', 1, 4] },
-  { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['solved', 150] },
-  { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['room', 15] },
-  { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['dragons', 5] },
-  { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15, null, 4] },
-  { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, req: ['clear', 1, 6] },
-  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, req: ['built', 9] },
-  { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 50, 'sub'] },
-  { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['clear', 1, 8] },
-  { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['clear', 1, 10] },
+  { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['clear', 1, 19] },
+  { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['clear', 1, 12] },
+  { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['clear', 1, 14] },
+  { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15, null, 6] },
+  { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, req: ['clear', 1, 10] },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, req: ['clear', 1, 8] },
+  { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['clear', 1, 16] },
+  { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['clear', 1, 18] },
+  { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['clear', 1, 20] },
 ];
 // minimum levels used by streak rewards (a streak only counts answers given at that level or above)
 const STREAK_LEVELS = [...new Set([...SKINS, ...PETS].filter(x => x.req && x.req[0] === 'streak' && x.req[3] > 1).map(x => x.req[3]))];
@@ -918,45 +925,31 @@ function load() {
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { } }
 
 /* ================= levels & problems ================= */
-// Levels: choices early, typed answers from the full tables. No timer until level 7, then it gets shorter (+5 s for typed answers).
-const LV = {
-  1: { mode: 'choice', n: 3, timer: 0, free: true },
-  2: { mode: 'choice', n: 3, timer: 0, free: true },
-  3: { mode: 'choice', n: 3, timer: 0, free: true },
-  4: { mode: 'choice', n: 3, timer: 0, free: true },
-  5: { mode: 'choice', n: 4, timer: 0, free: false },
-  6: { mode: 'choice', n: 4, timer: 0, free: false },
-  7: { mode: 'input', n: 0, timer: 20, free: false },
-  8: { mode: 'input', n: 0, timer: 10, free: false },
-  9: { mode: 'input', n: 0, timer: 10, free: false },
-  10: { mode: 'input', n: 0, timer: 5, free: false },
-};
+// 25 levels: 5 worlds (one per operation, then a mix) of 5 stages each.
+// Stages 1-2: choices, no timer. 3: choices with a timer. 4-5: typed, timer getting shorter. The dragon always wants typed answers.
+const NLV = 25, OPS = ['add', 'sub', 'mul', 'div', 'mix'], OP_SYM = ['+', '−', '×', '÷', '✦'];
+const worldOf = lv => Math.ceil(lv / 5), stageOf = lv => (lv - 1) % 5 + 1;
+const lvName = lv => `${t('worlds')[worldOf(lv) - 1]} ${stageOf(lv)}`;
+const lvDesc = lv => `${t('opNames')[worldOf(lv) - 1]}, ${t('nums')[worldOf(lv) - 1][Math.min(stageOf(lv), 2) - 1]} · ${t('modes')[stageOf(lv) - 1]}`;
+function cfg(lv, boss) {
+  const k = stageOf(lv);
+  if (boss) return { mode: 'input', n: 0, timer: [0, 0, 20, 20, 10][k - 1], free: false };
+  return { mode: k <= 3 ? 'choice' : 'input', n: k === 1 ? 3 : 4, timer: [0, 0, 15, 20, 10][k - 1], free: k <= 2 };
+}
 // right answers in a row needed before the dragon shows up, and right answers in a row to beat it
-const bossAfter = lv => lv <= 4 ? 3 : 5;
-const bossNeed = lv => lv <= 4 ? 2 : 3;
-function gen(lv) {
+const bossAfter = lv => stageOf(lv) <= 2 ? 3 : 5;
+const bossNeed = lv => stageOf(lv) <= 2 ? 2 : 3;
+function gen(lv, boss) {
   // a 0 (in the puzzle or as the answer) shows up in about 1 puzzle in 20, so it doesn't crowd the facts worth practising
   const zero = () => Math.random() < .05;
-  const sw = (x, y) => Math.random() < .5 ? [x, y] : [y, x];
-  const add = (lo, hi) => { const sum = rnd(Math.max(2, lo), hi), x = sum <= 10 && zero() ? pick([0, sum]) : rnd(Math.max(1, sum - 10), Math.min(9, sum - 1)); return [`${x} + ${sum - x} = ?`, sum]; };
-  const sub = () => { const x = rnd(2, 10), y = zero() ? pick([0, x]) : rnd(1, x - 1); return [`${x} − ${y} = ?`, x - y]; };
-  const mul = (a, b) => { let x = rnd(1, a), y = rnd(1, b); if (zero()) { if (Math.random() < .5) x = 0; else y = 0; } [x, y] = sw(x, y); return [`${x} × ${y} = ?`, x * y]; };
-  const div = hi => { const b = rnd(2, hi), q = rnd(1, 10); return [`${b * q} ÷ ${b} = ?`, q]; };
-  let r;
-  switch (lv) {
-    case 1: r = add(1, 10); break;
-    case 2: r = add(8, 15); break;
-    case 3: r = add(10, 20); break;
-    case 4: r = sub(); break;
-    case 5: r = mul(5, 5); break;
-    case 6: r = mul(5, 10); break;
-    case 7: r = mul(10, 10); break;
-    case 8: r = div(5); break;
-    case 9: r = div(10); break;
-    default: r = pick([() => add(10, 20), sub, () => mul(10, 10), () => div(10)])();
-  }
-  const p = Object.assign({ text: r[0], answer: r[1] }, LV[lv] || LV[10]);
-  if (p.timer && p.mode === 'input') p.timer += 5; // typing takes longer than tapping a choice
+  const hi = stageOf(lv) === 1 ? 5 : 10;
+  const add = () => { let x = rnd(1, hi), y = rnd(1, hi); if (zero()) { if (Math.random() < .5) x = 0; else y = 0; } return [`${x} + ${y} = ?`, x + y]; };
+  const sub = () => { const x = rnd(2, hi), y = zero() ? pick([0, x]) : rnd(1, x - 1); return [`${x} − ${y} = ?`, x - y]; };
+  const mul = () => { let x = rnd(1, hi), y = rnd(1, hi); if (zero()) { if (Math.random() < .5) x = 0; else y = 0; } return [`${x} × ${y} = ?`, x * y]; };
+  const div = () => { const b = zero() ? 1 : rnd(2, hi), q = zero() ? 0 : rnd(1, hi); return [`${b * q} ÷ ${b} = ?`, q]; };
+  const f = { add, sub, mul, div }, op = OPS[worldOf(lv) - 1];
+  const r = (op === 'mix' ? pick([add, sub, mul, div]) : f[op])();
+  const p = Object.assign({ text: r[0], answer: r[1] }, cfg(lv, boss));
   if (p.mode === 'choice') p.opts = makeChoices(p);
   return p;
 }
@@ -972,7 +965,7 @@ function makeChoices(p) {
   return [...set].sort((x, y) => x - y);
 }
 
-const tipFor = lv => { const band = lv <= 4 ? 'low' : lv <= 7 ? 'mid' : 'high'; return { band, i: rnd(0, I18N.en.tips[band].length - 1) }; };
+const tipFor = lv => { const band = [null, 'low', 'low', 'mid', 'high', pick(['low', 'mid', 'high'])][worldOf(lv)]; return { band, i: rnd(0, I18N.en.tips[band].length - 1) }; };
 const tipText = tp => { const v = t('tips'); return frSpace(v[tp.band][tp.i]); };
 
 /* ================= sound ================= */
@@ -998,11 +991,11 @@ function sfx(type) {
 /* ================= state ================= */
 let P = null;   // current profile
 let R = null;   // current run
-const level = () => clamp(Math.floor(P.rating), 1, 10);
+const level = () => clamp(Math.floor(P.rating), 1, NLV);
 const runLevel = level; // the level only changes by beating the dragon and choosing to go up
 const has = i => P.built.includes(i);
 const B = { well: 3, bakery: 5, windmill: 6, forge: 7, market: 8, owl: 9, castle: 11 }; // buildings with a bonus
-const potionCap = () => (runLevel() <= 4 ? 3 : 1) + (has(B.well) ? 1 : 0);
+const potionCap = () => (stageOf(runLevel()) <= 2 ? 3 : 1) + (has(B.well) ? 1 : 0);
 const ICON = {};
 
 function show(id) {
@@ -1019,7 +1012,7 @@ function renderTitle() {
     const play = btn('', 'play', () => { P = migrate(p); store.lastId = p.id; save(); renderLobby(); show('scr-lobby'); });
     const img = el('img', 'px'); img.src = spriteURL(SPR.hero, heroPal(p.skin), 3); img.alt = '';
     const txt = el('span'); txt.textContent = p.name;
-    const sm = el('small', null, t('rowSub', clamp(Math.floor(p.rating), 1, 10), p.bestRoom));
+    const sm = el('small', null, t('rowSub', clamp(Math.floor(p.rating), 1, NLV), p.bestRoom));
     txt.appendChild(sm);
     play.append(img, txt);
     const del = btn(t('del'), 'del small', () => {
@@ -1056,7 +1049,7 @@ document.querySelectorAll('#startSeg .btn').forEach(b => b.addEventListener('cli
 $('#btnCreate').addEventListener('click', () => {
   const name = $('#nameIn').value.trim();
   if (!name) { $('#nameIn').classList.add('shake'); $('#nameIn').placeholder = t('nameNeeded'); setTimeout(() => $('#nameIn').classList.remove('shake'), 300); $('#nameIn').focus(); return; }
-  const p = migrate({ id: 'h' + Date.now().toString(36), name, skin: 0, unlocked: [0], rating: startRating, start: startRating, bestRoom: 0, bestStreak: 0, gold: 0 });
+  const p = migrate({ id: 'h' + Date.now().toString(36), name, skin: 0, unlocked: [0], rating: startRating, start: startRating, lvVer: 2, bestRoom: 0, bestStreak: 0, gold: 0 });
   stats(p);
   store.profiles.push(p); store.lastId = p.id; save();
   P = p; renderLobby(); show('scr-lobby');
@@ -1071,7 +1064,7 @@ function migrate(p) {
   if (p.solved == null) p.solved = (p.stats && p.stats.ok) || 0;
   if (!p.boosts) p.boosts = { heart: false, potion: false };
   if (!p.opOk) p.opOk = {};
-  if (p.maxLv == null) p.maxLv = clamp(Math.floor(p.rating), 1, 10);
+  if (p.maxLv == null) p.maxLv = clamp(Math.floor(p.rating), 1, NLV);
   if (p.bestFloor == null) p.bestFloor = 0;
   if (!Array.isArray(p.clears)) p.clears = [];
   if (!p.bestAt) p.bestAt = {};
@@ -1085,7 +1078,16 @@ function migrate(p) {
   if (!Array.isArray(p.built)) p.built = [];
   if (!p.wins) p.wins = {};       // dragon wins per level: stars on the map
   if (p.start == null) p.start = p.rating; // levels open on the map without a win (start choice or grown-up setting)
-  p.rating = clamp(Math.floor(p.rating), 1, 10);
+  if (p.lvVer !== 2) {
+    // old levels: 1-3 adding, 4 taking away, 5-7 times, 8-9 dividing, 10 mix
+    const M = { 1: 1, 2: 2, 3: 2, 4: 7, 5: 11, 6: 12, 7: 12, 8: 16, 9: 17, 10: 22 }, m = v => M[clamp(Math.floor(v), 1, 10)];
+    p.clears = [...new Set(p.clears.map(m))];
+    const wins = {}; for (const [k, n] of Object.entries(p.wins)) wins[m(k)] = Math.max(wins[m(k)] || 0, n); p.wins = wins;
+    p.start = m(p.start); p.rating = m(p.rating); p.maxLv = m(p.maxLv); if (p.stats && p.stats.maxLv) p.stats.maxLv = m(p.stats.maxLv);
+    p.bestAt = {}; p.newLvs = []; p.lvVer = 2;
+  }
+  if (!Array.isArray(p.newLvs)) p.newLvs = [];
+  p.rating = clamp(Math.floor(p.rating), 1, NLV);
   return p;
 }
 const progressOf = (k, o, m) => k === 'built' ? P.built.length : k === 'streak' && m > 1 ? (P.bestAt[m] || 0) : k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
@@ -1145,43 +1147,51 @@ function openInfo(kind, i) {
   modal(nodes); $('#modalCard').classList.add('info');
 }
 /* ================= map ================= */
-const openTo = () => clamp(Math.max(P.start, ...P.clears.map(c => c + 1)), 1, 10);
+// a level opens after the one before it; the first level of a world after level 2 of the previous world;
+// the volcano after level 3 of all four worlds. Levels up to P.start are open anyway (start choice, grown-up setting).
+function needFor(lv) {
+  const w = worldOf(lv);
+  if (stageOf(lv) > 1) return [lv - 1];
+  return w === 1 ? [] : w === 5 ? [3, 8, 13, 18] : [(w - 2) * 5 + 2];
+}
+const listOf = a => a.length > 1 ? a.slice(0, -1).join(', ') + t('and') + a[a.length - 1] : a.join('');
+const isOpen = lv => lv <= P.start || needFor(lv).every(x => P.clears.includes(x));
 const starsOf = lv => Math.min(P.wins[lv] || 0, 3);
-const tierOf = lv => 1 + Math.floor((lv - 1) / 3);
+const tierOf = lv => [1, 1, 2, 2, 3][stageOf(lv) - 1] + (worldOf(lv) === 5 ? 1 : 0);
 // winning again at a level: stars 2 and 3 give a small bonus, banked right away
 const STAR_BONUS = { 2: { wood: 3, stone: 2 }, 3: { stone: 3, gem: 1 } };
-const MAP_H = 320, NODE = i => ({ x: Math.round(60 + 34 * Math.sin(i * 1.15)), y: MAP_H - 34 - i * 30 });
-const BIOME = [ // from level n up: ground, dots, decoration
-  [1, '#7bc86c', '#8fd67e', 'flower'], [4, '#4f9e57', '#3f8a49', 'tree'], [5, '#c9a26b', '#b08a55', 'rock'],
-  [8, '#dfe7f2', '#c8d2e0', 'peak'], [10, '#7a3328', '#5e251d', 'lava']];
-function biomeOf(lv) { let b = BIOME[0]; for (const x of BIOME) if (lv >= x[0]) b = x; return b; }
+const MAP_H = 794, NODE = i => ({ x: Math.round(60 + 34 * Math.sin(i * 1.15)), y: MAP_H - 34 - i * 30 });
+const BIOME = [ // per world: ground, dots, decoration
+  ['#7bc86c', '#8fd67e', 'flower'], ['#4f9e57', '#3f8a49', 'tree'], ['#c9a26b', '#b08a55', 'rock'],
+  ['#dfe7f2', '#c8d2e0', 'peak'], ['#7a3328', '#5e251d', 'lava']];
+const biomeOf = lv => BIOME[worldOf(lv) - 1];
 function drawMap() {
   const c = $('#mapCv').getContext('2d'), rr = mulberry(11);
   // bands: each level owns the strip around its node
-  for (let lv = 1; lv <= 10; lv++) {
-    const y0 = lv === 10 ? 0 : NODE(lv - 1).y - 15, y1 = lv === 1 ? MAP_H : NODE(lv - 1).y + 15, b = biomeOf(lv);
-    c.fillStyle = b[1]; c.fillRect(0, y0, 120, y1 - y0);
-    for (let k = 0; k < 14; k++) { c.fillStyle = b[2]; c.fillRect(rr() * 120 | 0, y0 + rr() * (y1 - y0) | 0, 2, 1); }
+  for (let lv = 1; lv <= NLV; lv++) {
+    const y0 = lv === NLV ? 0 : NODE(lv - 1).y - 15, y1 = lv === 1 ? MAP_H : NODE(lv - 1).y + 15, b = biomeOf(lv);
+    c.fillStyle = b[0]; c.fillRect(0, y0, 120, y1 - y0);
+    for (let k = 0; k < 14; k++) { c.fillStyle = b[1]; c.fillRect(rr() * 120 | 0, y0 + rr() * (y1 - y0) | 0, 2, 1); }
     for (let k = 0; k < 4; k++) {
       let x = rr() * 112 | 0; const y = y0 + 4 + (rr() * Math.max(1, y1 - y0 - 12) | 0), n = NODE(lv - 1);
       if (Math.abs(x - n.x) < 22) x = (x + 60) % 112;
-      if (b[3] === 'flower') { c.fillStyle = ['#ff8fb1', '#ffd84d', '#ffffff'][k % 3]; c.fillRect(x, y, 2, 2); c.fillStyle = '#3f9e4f'; c.fillRect(x, y + 2, 1, 2); }
-      if (b[3] === 'tree') { c.fillStyle = '#5a3a22'; c.fillRect(x + 3, y + 6, 2, 3); c.fillStyle = '#2f6e3a'; c.fillRect(x, y + 2, 8, 5); c.fillRect(x + 1, y, 6, 8); }
-      if (b[3] === 'rock') { c.fillStyle = '#8a7a6a'; c.fillRect(x, y + 2, 7, 4); c.fillRect(x + 1, y + 1, 4, 1); c.fillStyle = '#a89888'; c.fillRect(x + 1, y + 2, 2, 1); }
-      if (b[3] === 'peak') { for (let i = 0; i < 6; i++) { c.fillStyle = i < 2 ? '#ffffff' : '#8a97a8'; c.fillRect(x + 6 - i, y + i, 2 * i + 1, 1); } }
-      if (b[3] === 'lava') { c.fillStyle = '#ff7a2f'; c.fillRect(x, y + 3, 6, 2); c.fillStyle = '#ffc83d'; c.fillRect(x + 2, y + 3, 2, 1); }
+      if (b[2] === 'flower') { c.fillStyle = ['#ff8fb1', '#ffd84d', '#ffffff'][k % 3]; c.fillRect(x, y, 2, 2); c.fillStyle = '#3f9e4f'; c.fillRect(x, y + 2, 1, 2); }
+      if (b[2] === 'tree') { c.fillStyle = '#5a3a22'; c.fillRect(x + 3, y + 6, 2, 3); c.fillStyle = '#2f6e3a'; c.fillRect(x, y + 2, 8, 5); c.fillRect(x + 1, y, 6, 8); }
+      if (b[2] === 'rock') { c.fillStyle = '#8a7a6a'; c.fillRect(x, y + 2, 7, 4); c.fillRect(x + 1, y + 1, 4, 1); c.fillStyle = '#a89888'; c.fillRect(x + 1, y + 2, 2, 1); }
+      if (b[2] === 'peak') { for (let i = 0; i < 6; i++) { c.fillStyle = i < 2 ? '#ffffff' : '#8a97a8'; c.fillRect(x + 6 - i, y + i, 2 * i + 1, 1); } }
+      if (b[2] === 'lava') { c.fillStyle = '#ff7a2f'; c.fillRect(x, y + 3, 6, 2); c.fillStyle = '#ffc83d'; c.fillRect(x + 2, y + 3, 2, 1); }
     }
   }
   // volcano at the very top
   c.fillStyle = '#4a2a24'; for (let i = 0; i < 12; i++) c.fillRect(84 - i * 2, 4 + i, 6 + i * 4, 1);
   c.fillStyle = '#ff7a2f'; c.fillRect(85, 2, 4, 3); c.fillStyle = '#ffc83d'; c.fillRect(86, 1, 2, 2);
   // the path, from the village to the volcano
-  const pts = [{ x: 60, y: MAP_H }, ...Array.from({ length: 10 }, (_, i) => NODE(i))];
+  const pts = [{ x: 60, y: MAP_H }, ...Array.from({ length: NLV }, (_, i) => NODE(i))];
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1], b = pts[i], n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 3);
     for (let k = 0; k < n; k++) {
       const x = a.x + (b.x - a.x) * k / n, y = a.y + (b.y - a.y) * k / n;
-      c.fillStyle = i - 1 < openTo() ? '#f4e2b0' : '#9a8f86'; c.fillRect(x - 1 | 0, y - 1 | 0, 3, 3);
+      c.fillStyle = isOpen(i) ? '#f4e2b0' : '#9a8f86'; c.fillRect(x - 1 | 0, y - 1 | 0, 3, 3);
     }
   }
   // the village at the start of the path
@@ -1189,28 +1199,34 @@ function drawMap() {
 }
 function renderMap() {
   drawMap();
-  const box = $('#map'); box.querySelectorAll('.node,.me').forEach(n => n.remove());
-  const top = openTo();
-  for (let lv = 1; lv <= 10; lv++) {
-    const n = NODE(lv - 1), st = starsOf(lv), lock = lv > top;
-    const b = btn(String(lv), 'node ' + (lock ? 'lock' : st ? 'done' : 'open') + (P.newLv === lv ? ' new' : ''), () => { sfx('tap'); openLevel(lv); });
+  const box = $('#map'); box.querySelectorAll('.node,.me,.wtag').forEach(n => n.remove());
+  for (let w = 1; w <= 5; w++) {
+    // world name on the side away from its first stop
+    const n = NODE((w - 1) * 5), tag = el('div', 'wtag', OP_SYM[w - 1] + ' ' + t('worlds')[w - 1]);
+    tag.style.top = ((n.y + 2) / MAP_H * 100) + '%';
+    if (n.x < 60) tag.style.right = '6px'; else tag.style.left = '6px';
+    box.appendChild(tag);
+  }
+  for (let lv = 1; lv <= NLV; lv++) {
+    const n = NODE(lv - 1), st = starsOf(lv), lock = !isOpen(lv);
+    const b = btn(OP_SYM[worldOf(lv) - 1] + stageOf(lv), 'node ' + (lock ? 'lock' : st ? 'done' : 'open') + (P.newLvs.includes(lv) ? ' new' : ''), () => { sfx('tap'); openLevel(lv); });
     b.style.left = (n.x / 120 * 100) + '%'; b.style.top = (n.y / MAP_H * 100) + '%';
-    b.setAttribute('aria-label', t('level', lv));
+    b.setAttribute('aria-label', lvName(lv));
     if (!lock) b.appendChild(el('span', 'st', '★'.repeat(st) + '☆'.repeat(3 - st)));
     box.appendChild(b);
   }
-  const me = el('img', 'px me'), n = NODE(clamp(level(), 1, top) - 1);
+  const me = el('img', 'px me'), n = NODE(level() - 1);
   me.src = spriteURL(SPR.hero, heroPal(P.skin), 3); me.alt = '';
   me.style.left = ((n.x + 15) / 120 * 100) + '%'; me.style.top = ((n.y + 10) / MAP_H * 100) + '%';
   box.appendChild(me);
 }
 function scrollMapToHero() {
-  const n = NODE(clamp(level(), 1, openTo()) - 1), map = $('#map'), panes = $('#panes');
+  const n = NODE(level() - 1), map = $('#map'), panes = $('#panes');
   panes.scrollTop = map.offsetTop + map.clientHeight * n.y / MAP_H - panes.clientHeight / 2;
 }
 function openLevel(lv) {
-  const nodes = [el('h2', null, t('level', lv)), el('p', 'muted', t('biomes')[lv - 1]), el('p', 'req', t('lvDesc')[lv - 1])];
-  if (lv > openTo()) nodes.push(el('p', null, t('lockedLv', lv - 1)));
+  const nodes = [el('h2', null, lvName(lv)), el('p', 'req', lvDesc(lv)), el('p', 'muted', t('dragonLbl') + t('dragonModes')[stageOf(lv) - 1])];
+  if (!isOpen(lv)) nodes.push(el('p', null, t('lockedLv', listOf(needFor(lv).filter(x => !P.clears.includes(x)).map(lvName)))));
   else {
     const st = starsOf(lv);
     nodes.push(el('div', 'stars', '★'.repeat(st) + '☆'.repeat(3 - st)));
@@ -1220,7 +1236,7 @@ function openLevel(lv) {
       const row = el('div', 'rw'); row.append(el('span', null, t('firstWin')), itemImg(rw[0], rw[1], false, rw[0] === 'skin' ? 3 : 4)); nodes.push(row);
     }
     nodes.push(el('p', 'muted', st >= 3 ? t('allStars') : t('starsNote')));
-    nodes.push(btn(t('play'), 'primary', () => { closeModal(); if (P.newLv === lv) P.newLv = 0; P.rating = lv; save(); sfx('door'); startRun(); }));
+    nodes.push(btn(t('play'), 'primary', () => { closeModal(); P.newLvs = P.newLvs.filter(x => x !== lv); P.rating = lv; save(); sfx('door'); startRun(); }));
   }
   nodes.push(btn(t('close'), '', closeModal));
   modal(nodes); $('#modalCard').classList.add('lvcard');
@@ -1232,10 +1248,9 @@ function renderLobby() {
   migrate(P);
   $('#lobbyHero').src = spriteURL(SPR.hero, heroPal(P.skin), 8);
   $('#lobbyName').textContent = P.name;
-  const top = openTo();
-  $('#lobbyStars').textContent = t('stars', Array.from({ length: 10 }, (_, i) => starsOf(i + 1)).reduce((a, b) => a + b, 0));
+  $('#lobbyStars').textContent = t('stars', Array.from({ length: NLV }, (_, i) => starsOf(i + 1)).reduce((a, b) => a + b, 0));
   $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.built.length;
-  $('#lvVal').textContent = top; $('#lvDesc').textContent = t('lvDesc')[top - 1];
+  $('#lvVal').textContent = P.start; $('#lvDesc').textContent = lvName(P.start);
   $('#wallet').replaceChildren(matsRow(P.mats, false, P.mats));
   const lp = $('#lobbyPet');
   if (P.pet >= 0) { lp.src = spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 5); lp.hidden = false; } else lp.hidden = true;
@@ -1258,8 +1273,8 @@ function setTab(k) {
 }
 document.querySelectorAll('#lobbyTabs .tab').forEach(b => b.addEventListener('click', () => { sfx('tap'); setTab(b.dataset.tab); }));
 // grown-ups can open levels without the dragon; levels already won stay open
-$('#lvDown').addEventListener('click', () => { P.start = clamp(openTo() - 1, 1, 10); P.rating = Math.min(P.rating, openTo()); save(); renderLobby(); });
-$('#lvUp').addEventListener('click', () => { P.start = clamp(openTo() + 1, 1, 10); save(); renderLobby(); });
+$('#lvDown').addEventListener('click', () => { P.start = clamp(P.start - 1, 1, NLV); save(); renderLobby(); });
+$('#lvUp').addEventListener('click', () => { P.start = clamp(P.start + 1, 1, NLV); save(); renderLobby(); });
 $('#btnStats').addEventListener('click', () => { renderStats(); show('scr-stats'); });
 $('#btnStatsBack').addEventListener('click', () => { renderLobby(); show('scr-lobby'); });
 $('#btnSwitch').addEventListener('click', () => { renderTitle(); show('scr-title'); });
@@ -1466,10 +1481,10 @@ function makeRoom(depth) {
   const sides = pick([['left', 'top', 'right'], ['left', 'top'], ['top', 'right'], ['left', 'right'], ['left', 'top', 'right']]);
   const locked = type === 'empty' ? true : type === 'coach' || depth === 1 ? false : Math.random() < .4;
   const room = { type, locked, doors: sides.map(s => ({ side: s, open: !locked, p: null })), enc: null };
-  const pool = lv <= 4 ? ['slime', 'bat'] : lv <= 7 ? ['slime', 'bat', 'goblin'] : ['bat', 'goblin'];
+  const pool = stageOf(lv) <= 2 ? ['slime', 'bat'] : stageOf(lv) <= 4 ? ['slime', 'bat', 'goblin'] : ['bat', 'goblin'];
   if (type === 'monster') room.enc = { kind: 'monster', sprite: pick(pool), need: 1, progress: 0, alive: true };
   if (type === 'boss') room.enc = { kind: 'boss', need: bossNeed(lv), progress: 0, alive: true };
-  if (type === 'chest') { const golden = lv >= 3 && Math.random() < .3; room.enc = { kind: 'chest', golden, need: golden ? 2 : 1, progress: 0, opened: false }; }
+  if (type === 'chest') { const golden = stageOf(lv) >= 3 && Math.random() < .3; room.enc = { kind: 'chest', golden, need: golden ? 2 : 1, progress: 0, opened: false }; }
   if (type === 'coach') room.enc = { kind: 'coach', tip: tipFor(lv) };
   return room;
 }
@@ -1527,9 +1542,7 @@ function walkThrough(d) {
 function ask(ctx) {
   let p;
   if (ctx.kind === 'door') { ctx.door.p = ctx.door.p || gen(runLevel()); p = ctx.door.p; }
-  else p = gen(runLevel());
-  // from level 3 the dragon wants typed answers (levels 7+ are typed everywhere)
-  if (ctx.kind === 'enc' && R.room.type === 'boss' && runLevel() >= 3 && p.mode === 'choice') { p.mode = 'input'; delete p.opts; }
+  else p = gen(runLevel(), ctx.kind === 'enc' && R.room.type === 'boss');
   R.phase = 'question';
   R.q = { p, ctx, t0: now(), wrongs: 0, typed: '', done: false };
   renderQ();
@@ -1670,7 +1683,7 @@ function renderPips() {
 
 /* ================= per-kid stats ================= */
 function stats(p) {
-  if (!p.stats) p.stats = { total: 0, ok: 0, ops: {}, missed: {}, runs: [], maxLv: clamp(Math.floor(p.rating), 1, 10) };
+  if (!p.stats) p.stats = { total: 0, ok: 0, ops: {}, missed: {}, runs: [], maxLv: clamp(Math.floor(p.rating), 1, NLV) };
   return p.stats;
 }
 function catOf(text) {
@@ -1704,7 +1717,7 @@ function renderStats() {
   body.replaceChildren();
   const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
   const sum = el('div', 'card sum');
-  for (const [v, k] of [[s.total, 'answered'], [s.total ? pct(s.ok, s.total) + (store.lang === 'fr' ? '\u202f%' : '%') : '–', 'firstTry'], [s.runs.length, 'runs'], [s.maxLv || level(), 'topLevel']]) {
+  for (const [v, k] of [[s.total, 'answered'], [s.total ? pct(s.ok, s.total) + (store.lang === 'fr' ? '\u202f%' : '%') : '–', 'firstTry'], [s.runs.length, 'runs'], [lvName(s.maxLv || level()), 'topLevel']]) {
     const d = el('div'); d.append(el('b', null, String(v)), el('span', null, t(k))); sum.appendChild(d);
   }
   body.appendChild(sum);
@@ -1755,9 +1768,12 @@ function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.rem
 function winLevel(lv) {
   const wins = P.wins[lv] = (P.wins[lv] || 0) + 1;
   if (!P.clears.includes(lv)) {
-    const before = openTo(); P.clears.push(lv);
-    later(() => toast(t('cleared', lv), 'flame'), 300);
-    if (openTo() > before) { P.newLv = openTo(); later(() => toast(t('newLevel', openTo()), 'map'), 2200); }
+    const shut = Array.from({ length: NLV }, (_, i) => i + 1).filter(x => !isOpen(x));
+    P.clears.push(lv);
+    later(() => toast(t('cleared', lvName(lv)), 'flame'), 300);
+    const opened = shut.filter(isOpen);
+    P.newLvs.push(...opened);
+    opened.forEach((x, i) => later(() => toast(t('newLevel', lvName(x)), 'map'), 2200 + i * 700));
   }
   const bonus = STAR_BONUS[wins];
   if (bonus) {
