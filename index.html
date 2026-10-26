@@ -123,22 +123,27 @@ input[type=text]{
 .stats b{display:block;font-size:24px}
 .stats span{font-size:13px;color:var(--ink-soft)}
 .wardrobe{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wardrobe>*{min-width:0}
 .skin{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;padding:8px 4px;min-height:84px}
 .skin img{width:44px;height:44px}
 .skin.on{background:var(--gold);color:#2b2240}
 .skin.locked{opacity:.55}
-.wallet{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:17px}
-.wallet img{width:20px;height:20px}.wallet b{font-size:20px}
+.wallet{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:17px}
+.mats{display:inline-flex;align-items:center;gap:10px;font-family:var(--read);font-weight:600}
+.mats span{display:inline-flex;align-items:center;gap:3px}
+.mats img{width:20px;height:20px}
+.mats.sm{gap:4px;font-size:13px}.mats.sm span{gap:1px}.mats.sm img{width:12px;height:12px}
+.mats .miss{color:var(--coral)}
 #lobbyPet{width:52px;height:52px;align-self:flex-end;margin-left:-22px;background:none;border:0;padding:0}
 .skin .price{display:flex;align-items:center;gap:3px;font-family:var(--read);font-weight:600}
 .skin .price img{width:14px;height:14px}
 .skin.buy{opacity:.85}
 .skin .none{width:44px;height:44px;display:grid;place-items:center;font-size:26px;color:var(--ink-soft)}
-.boosts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.boosts .btn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:16px}
-.boosts .btn img{width:22px;height:22px}
-.boosts .btn small{font-size:13px}
-.boosts .btn.on{background:var(--mint);color:#fff}
+.village{display:block;width:100%;height:auto;border:3px solid var(--edge);border-radius:8px;margin-bottom:10px;touch-action:manipulation}
+.skin.can{border-color:var(--gold);animation:glow 1.2s ease-in-out infinite alternate}
+@media (prefers-reduced-motion: reduce){.skin.can{animation:none;box-shadow:0 4px 0 var(--shadow),0 0 0 3px var(--gold)}}
+.skin.built{background:color-mix(in srgb,var(--mint) 25%,var(--btn))}
+.info .cost{display:flex;justify-content:center}
 .info img.big{width:96px;height:96px;margin:0 auto}
 .info .req{font-size:18px}
 .info .prog{height:12px;border:3px solid var(--edge);border-radius:6px;overflow:hidden;background:var(--bg)}
@@ -269,18 +274,25 @@ h3{margin:0 0 8px;font-size:18px}
         <h2 id="lobbyName"></h2>
         <div id="lobbyLvl"></div>
         <div id="lobbyLvlDesc" class="muted"></div>
-        <div class="wallet"><img id="walletIco" class="px" alt=""><b id="wallet">0</b><span data-i18n="walletLbl"></span></div>
+        <div class="wallet" id="wallet"></div>
       </div>
     </div>
     <button id="btnPlay" class="btn primary" style="font-size:22px;min-height:60px" data-i18n="enter"></button>
     <div class="tabs" id="lobbyTabs" role="tablist">
+      <button class="btn tab" role="tab" data-tab="village"><img id="tabVillage" class="px" alt=""><span data-i18n="tabVillage"></span></button>
       <button class="btn tab" role="tab" data-tab="skin"><img id="tabSkin" class="px" alt=""><span data-i18n="tabSkins"></span></button>
       <button class="btn tab" role="tab" data-tab="pet"><img id="tabPet" class="px" alt=""><span data-i18n="pets"></span></button>
-      <button class="btn tab" role="tab" data-tab="boost"><img id="tabBoost" class="px" alt=""><span data-i18n="tabBoosts"></span></button>
       <button class="btn tab" role="tab" data-tab="more"><span class="dots" aria-hidden="true">•••</span><span data-i18n="tabMore"></span></button>
     </div>
     <div class="panes" id="panes">
-      <div class="pane" data-pane="skin" role="tabpanel">
+      <div class="pane" data-pane="village" role="tabpanel">
+        <div class="card">
+          <canvas id="villageCv" class="village" width="128" height="96"></canvas>
+          <div id="buildings" class="wardrobe"></div>
+          <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="villageNote"></p>
+        </div>
+      </div>
+      <div class="pane" data-pane="skin" role="tabpanel" hidden>
         <div class="card">
           <div id="wardrobe" class="wardrobe"></div>
           <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="wardNote"></p>
@@ -292,18 +304,11 @@ h3{margin:0 0 8px;font-size:18px}
           <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="petNote"></p>
         </div>
       </div>
-      <div class="pane" data-pane="boost" role="tabpanel" hidden>
-        <div class="card">
-          <h3 data-i18n="boosts"></h3>
-          <div id="boosts" class="boosts"></div>
-          <p style="margin:10px 0 0;font-size:14px;color:var(--ink-soft)" data-i18n="boostNote"></p>
-        </div>
-      </div>
       <div class="pane" data-pane="more" role="tabpanel" hidden>
         <div class="card stats">
           <div><b id="stRoom">0</b><span data-i18n="bestRoom"></span></div>
           <div><b id="stStreak">0</b><span data-i18n="bestStreak"></span></div>
-          <div><b id="stGold">0</b><span data-i18n="goldFound"></span></div>
+          <div><b id="stGold">0</b><span data-i18n="builtCount"></span></div>
         </div>
         <div class="card">
           <h3 data-i18n="lvTitle"></h3>
@@ -332,7 +337,7 @@ h3{margin:0 0 8px;font-size:18px}
       <div class="grp">
         <div class="hearts" id="hudHearts"></div>
         <div class="it"><img class="px" id="icoPotion" alt="Potions"><span id="hudPotion">0</span></div>
-        <div class="it"><img class="px" id="icoCoin" alt="Gold"><span id="hudGold">0</span></div>
+        <div class="it"><img class="px" id="icoBag" alt="Bag"><span id="hudGold">0</span></div>
       </div>
       <div class="grp">
         <div class="it"><img class="px" id="icoFlame" alt="Streak"><span id="hudStreak">0</span></div>
@@ -381,14 +386,15 @@ const I18N = {
     s1: 'Just starting', s1d: 'Adding small numbers, ages 5–6', s2: 'Getting good', s2d: 'Adding is easy, now taking away, ages 6–7',
     s3: 'Math whiz', s3d: 'Times tables, ages 8+', cancel: 'Cancel', create: 'Create hero',
     del: 'Delete', sure: 'Sure?', rowSub: (lv, r) => `Level ${lv}, best room ${r}`,
-    enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', goldFound: 'Gold found',
-    wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabBoosts: 'Boosts', tabMore: 'More', wardNote: 'Buy outfits with gold. Special ones are won with achievements: tap one to see how.', locked: 'Locked',
-    walletLbl: 'gold to spend', pets: 'Pets', petNote: 'A pet follows you in the dungeon. Some are bought, some are won: tap one to see how.', noPet: 'No pet',
+    enter: 'Enter the dungeon', bestRoom: 'Best room', bestStreak: 'Best streak', builtCount: 'Buildings',
+    wardrobe: 'Wardrobe', tabSkins: 'Outfits', tabMore: 'More', tabVillage: 'Village', villageNote: 'Monsters drop wood, chests stone, dragons crystals. Tap a building to see what it needs.',
+    bldNames: ['Campfire', 'Tent', 'Hut', 'Well', 'Garden', 'Bakery', 'Windmill', 'Forge', 'Market', 'Owl tower', 'Fountain', 'Castle'],
+    build: 'Build it!', built: 'Built!', builtTitle: n => `${n} built!`, needMats: 'Bring more from the dungeon:', inBag: 'In your bag:', leaveBag: 'Leave now, keep half your bag',
+    wardNote: 'Outfits are won with achievements: tap one to see how.', locked: 'Locked',
+    pets: 'Pets', petNote: 'A pet follows you in the dungeon. Pets are won with achievements: tap one to see how.', noPet: 'No pet',
     petNames: ['Chick', 'Cat', 'Puppy', 'Bunny', 'Frog', 'Ghost', 'Baby dragon', 'Owlet', 'Turtle', 'Fox', 'Penguin', 'Blue slime', 'Unicorn'],
-    boosts: 'Boosts for the next run', boostNote: 'Bought boosts are used when you enter the dungeon. Tap again to get your gold back.',
-    boostHeart: '+1 heart', boostPotion: '+1 potion', boostOn: 'Ready! Tap to undo', potionMax: n => `Max ${n} potion at this level`,
-    buy: p => `Buy for ${p} gold`, needMore: n => `You need ${n} more gold.`, special: 'Special', close: 'Close',
-    req: (k, n, o, m) => ({ clear: `Beat the dragon at level ${o} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row at level ${m} or higher.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
+    special: 'Special', close: 'Close',
+    req: (k, n, o, m) => ({ built: n > 1 ? `Build ${n} buildings in your village.` : 'Build your first building in the village.', clear: `Beat the dragon at level ${o} for the first time.`, streak: m > 1 ? `Get ${n} right answers in a row at level ${m} or higher.` : `Get ${n} right answers in a row in one run.`, room: `Reach room ${n}.`, dragons: `Beat the dragon ${n} times.`, solved: `Answer ${n} puzzles right.`, level: `Reach puzzle level ${n}.`, floor: `Clear floor ${n}.`, op: ({ add: `Get ${n} additions right.`, sub: `Get ${n} subtractions right.`, mul: `Get ${n} multiplications right.`, div: `Get ${n} divisions right.`, miss: `Find ${n} missing numbers.` })[o] })[k],
     progress: (c, n) => `So far: ${c} / ${n}`, newOutfit: k => `New outfit: ${k}!`, newPet: k => `New pet: ${k}!`,
     lvTitle: 'Puzzle level (for grown-ups)', easier: 'Easier', harder: 'Harder', switchHero: 'Switch hero', statsBtn: 'See stats', back: 'Back',
     level: n => `Level ${n}`, room: (n, m) => `Room ${n}/${m}`, dragonNear: 'The dragon waits behind the next door!',
@@ -404,18 +410,18 @@ const I18N = {
     doors: { left: 'Left', top: 'Middle', right: 'Right' }, lockAsks: 'This lock asks:', otherDoor: 'Other door', leaveIt: 'Leave it',
     fast: 'Super fast! +1 free-try potion', streakSkin: (n, k) => `${n} in a row! New outfit: ${k}`, streak: n => `${n} in a row!`,
     praise: ['Correct!', 'Nice one!', 'You got it!', 'Brilliant!'],
-    dragonBeaten: g => `Dragon beaten! +${g} gold, +1 heart`, gold: g => `+${g} gold`, emberGone: 'Ember flies away, defeated!', poof: 'Poof! It’s gone.',
+    dragonBeaten: 'Dragon beaten! +1 heart', emberGone: 'Ember flies away, defeated!', poof: 'Poof! It’s gone.',
     hitMore: n => `Hit! ${n} more in a row.`, heart: '+1 heart', potion: '+1 free-try potion', chestOpen: 'The chest pops open!',
     clickMore: n => `Click! ${n} more in a row.`, potionUsed: 'Potion used: one more try!', freeTry: 'Not quite. That one’s free, try again!',
     potionTime: 'Time’s up! Your potion gives you more time.', tryAgain: 'Not quite. Try again!',
     answerWas: (a, to) => (to ? 'Time’s up! ' : 'Oops! ') + `The answer was ${a}.`,
-    napTitle: 'Your hero needs a nap!', napBody: (r, s, g, k) => `You explored ${r} rooms and solved ${s} puzzles. You keep half your bag: ${k} of ${g} gold.`,
-    floorCleared: n => `Floor ${n} cleared!`, bag: g => `You have ${g} gold in your bag.`,
-    stopOrMore: 'Go home to keep it all, or go deeper: each floor gives more gold. If you run out of hearts you lose half your bag.',
-    goHome: g => `Go home with ${g} gold`, goSame: n => `Stay on level ${n}`, goHarder: (n, d) => `Go up to level ${n}: ${d}`,
+    napTitle: 'Your hero needs a nap!', napBody: (r, s) => `You explored ${r} rooms and solved ${s} puzzles. You keep half your bag:`,
+    floorCleared: n => `Floor ${n} cleared!`, bag: 'In your bag:',
+    stopOrMore: 'Go home to keep it all, or go deeper: each floor gives more. If you run out of hearts you lose half your bag.',
+    goHome: 'Go home with my bag', goSame: n => `Stay on level ${n}`, goHarder: (n, d) => `Go up to level ${n}: ${d}`,
     floorSame: n => `Floor ${n}: same puzzles!`, floorStart: n => `Level ${n}: new puzzles!`,
-    homeTitle: 'Welcome home!', homeBody: (r, g) => `You explored ${r} rooms and brought back ${g} gold.`, ok: 'OK',
-    playAgain: 'Play again', backHero: 'Back to my hero', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'), leave: g => `Leave now, keep half (${g} gold)`,
+    homeTitle: 'Welcome home!', homeBody: r => `You explored ${r} rooms and brought back:`, ok: 'OK',
+    playAgain: 'Play again', backHero: 'Back to my hero', paused: 'Paused', resume: 'Resume', sound: on => 'Sound: ' + (on ? 'on' : 'off'),
     statsTitle: n => `${n}’s stats`, answered: 'Puzzles answered', firstTry: 'Right first time', runs: 'Runs played', topLevel: 'Highest level',
     byOp: 'By type of puzzle', ops: { add: 'Adding', sub: 'Taking away', mul: 'Times', div: 'Dividing', miss: 'Missing number', mix: 'Mixed' },
     opLine: (n, avg) => `${n} puzzles` + (avg ? `, ${avg} s on average when right` : ''), practise: 'Needs practice',
@@ -433,14 +439,15 @@ const I18N = {
     s1: 'Je débute', s1d: 'Petites additions, 5–6 ans', s2: 'Je progresse', s2d: 'Les additions, c’est facile : place aux soustractions, 6–7 ans',
     s3: 'As du calcul', s3d: 'Tables de multiplication, 8 ans et plus', cancel: 'Annuler', create: 'Créer',
     del: 'Supprimer', sure: 'Confirmer ?', rowSub: (lv, r) => `Niveau ${lv}, meilleure salle ${r}`,
-    enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', goldFound: 'Or trouvé',
-    wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabBoosts: 'Bonus', tabMore: 'Plus', wardNote: 'Achète des tenues avec ton or. Les tenues spéciales se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
-    walletLbl: 'or à dépenser', pets: 'Compagnons', petNote: 'Un compagnon te suit dans le donjon. Certains s’achètent, d’autres se gagnent : touche-en un pour savoir comment.', noPet: 'Aucun',
+    enter: 'Entrer dans le donjon', bestRoom: 'Meilleure salle', bestStreak: 'Meilleure série', builtCount: 'Bâtiments',
+    wardrobe: 'Garde-robe', tabSkins: 'Tenues', tabMore: 'Plus', tabVillage: 'Village', villageNote: 'Les monstres donnent du bois, les coffres de la pierre, les dragonnes des cristaux. Touche un bâtiment pour voir ce qu’il faut.',
+    bldNames: ['Feu de camp', 'Tente', 'Cabane', 'Puits', 'Potager', 'Boulangerie', 'Moulin', 'Forge', 'Marché', 'Tour de la chouette', 'Fontaine', 'Château'],
+    build: 'Construire !', built: 'Construit !', builtTitle: n => `${n} : construit !`, needMats: 'Rapporte encore du donjon :', inBag: 'Dans ton sac :', leaveBag: 'Partir maintenant, garder la moitié du sac',
+    wardNote: 'Les tenues se gagnent avec des exploits : touche-en une pour savoir comment.', locked: 'Verrouillée',
+    pets: 'Compagnons', petNote: 'Un compagnon te suit dans le donjon. Ils se gagnent avec des exploits : touche-en un pour savoir comment.', noPet: 'Aucun',
     petNames: ['Poussin', 'Chaton', 'Chiot', 'Lapin', 'Grenouille', 'Fantôme', 'Bébé dragon', 'Chouette', 'Tortue', 'Renarde', 'Pingouin', 'Gelée bleue', 'Licorne'],
-    boosts: 'Bonus pour la prochaine partie', boostNote: 'Les bonus achetés s’activent à l’entrée du donjon. Touche encore pour récupérer ton or.',
-    boostHeart: '+1 cœur', boostPotion: '+1 potion', boostOn: 'Prêt ! Touche pour annuler', potionMax: n => `Max ${n} potion à ce niveau`,
-    buy: p => `Acheter pour ${p} or`, needMore: n => `Il te manque ${n} or.`, special: 'Spécial', close: 'Fermer',
-    req: (k, n, o, m) => ({ clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée au niveau ${m} ou plus.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
+    special: 'Spécial', close: 'Fermer',
+    req: (k, n, o, m) => ({ built: n > 1 ? `Construis ${n} bâtiments dans ton village.` : 'Construis ton premier bâtiment au village.', clear: `Bats la dragonne au niveau ${o} pour la première fois.`, streak: m > 1 ? `Réussis ${n} calculs d’affilée au niveau ${m} ou plus.` : `Réussis ${n} calculs d’affilée pendant une partie.`, room: `Atteins la salle ${n}.`, dragons: `Bats la dragonne ${n} fois.`, solved: `Réussis ${n} calculs au total.`, level: `Atteins le niveau ${n}.`, floor: `Termine l’étage ${n}.`, op: ({ add: `Réussis ${n} additions.`, sub: `Réussis ${n} soustractions.`, mul: `Réussis ${n} multiplications.`, div: `Réussis ${n} divisions.`, miss: `Trouve ${n} nombres manquants.` })[o] })[k],
     progress: (c, n) => `Pour l’instant : ${c} / ${n}`, newOutfit: k => `Nouvelle tenue : ${k} !`, newPet: k => `Nouveau compagnon : ${k} !`,
     lvTitle: 'Niveau des calculs (pour les adultes)', easier: 'Plus facile', harder: 'Plus difficile', switchHero: 'Changer de personnage', statsBtn: 'Voir les stats', back: 'Retour',
     level: n => `Niveau ${n}`, room: (n, m) => `Salle ${n}/${m}`, dragonNear: 'La dragonne attend derrière la prochaine porte !',
@@ -456,18 +463,18 @@ const I18N = {
     doors: { left: 'Gauche', top: 'Milieu', right: 'Droite' }, lockAsks: 'Ce cadenas demande :', otherDoor: 'Autre porte', leaveIt: 'Laisser',
     fast: 'Super rapide ! +1 potion d’essai gratuit', streakSkin: (n, k) => `${n} d’affilée ! Nouvelle tenue : ${k}`, streak: n => `${n} d’affilée !`,
     praise: ['Exact !', 'Bien joué !', 'Trouvé !', 'Génial !'],
-    dragonBeaten: g => `Dragonne vaincue ! +${g} or, +1 cœur`, gold: g => `+${g} or`, emberGone: 'Braise s’envole, vaincue !', poof: 'Pouf ! Disparu.',
+    dragonBeaten: 'Dragonne vaincue ! +1 cœur', emberGone: 'Braise s’envole, vaincue !', poof: 'Pouf ! Disparu.',
     hitMore: n => `Touché ! Encore ${n} d’affilée.`, heart: '+1 cœur', potion: '+1 potion d’essai gratuit', chestOpen: 'Le coffre s’ouvre !',
     clickMore: n => `Clic ! Encore ${n} d’affilée.`, potionUsed: 'Potion utilisée : encore un essai !', freeTry: 'Pas tout à fait. Celle-ci est gratuite, réessaie !',
     potionTime: 'Temps écoulé ! Ta potion te donne plus de temps.', tryAgain: 'Pas tout à fait. Réessaie !',
     answerWas: (a, to) => (to ? 'Temps écoulé ! ' : 'Oups ! ') + `La réponse était ${a}.`,
-    napTitle: 'C’est l’heure de la sieste !', napBody: (r, s, g, k) => `Tu as exploré ${r} salles et résolu ${s} calculs. Tu gardes la moitié de ton sac : ${k} or sur ${g}.`,
-    floorCleared: n => `Étage ${n} terminé !`, bag: g => `Tu as ${g} or dans ton sac.`,
-    stopOrMore: 'Rentre pour tout garder, ou descends : chaque étage rapporte plus d’or. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
-    goHome: g => `Rentrer avec ${g} or`, goSame: n => `Rester au niveau ${n}`, goHarder: (n, d) => `Passer au niveau ${n} : ${d}`,
+    napTitle: 'C’est l’heure de la sieste !', napBody: (r, s) => `Tu as exploré ${r} salles et résolu ${s} calculs. Tu gardes la moitié de ton sac :`,
+    floorCleared: n => `Étage ${n} terminé !`, bag: 'Dans ton sac :',
+    stopOrMore: 'Rentre pour tout garder, ou descends : chaque étage rapporte plus. Si tu n’as plus de cœurs, tu perds la moitié de ton sac.',
+    goHome: 'Rentrer avec mon sac', goSame: n => `Rester au niveau ${n}`, goHarder: (n, d) => `Passer au niveau ${n} : ${d}`,
     floorSame: n => `Étage ${n} : mêmes calculs !`, floorStart: n => `Niveau ${n} : nouveaux calculs !`,
-    homeTitle: 'Bienvenue à la maison !', homeBody: (r, g) => `Tu as exploré ${r} salles et rapporté ${g} or.`, ok: 'OK',
-    playAgain: 'Rejouer', backHero: 'Retour à mon personnage', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'), leave: g => `Partir maintenant, garder la moitié (${g} or)`,
+    homeTitle: 'Bienvenue à la maison !', homeBody: r => `Tu as exploré ${r} salles et rapporté :`, ok: 'OK',
+    playAgain: 'Rejouer', backHero: 'Retour à mon personnage', paused: 'Pause', resume: 'Reprendre', sound: on => 'Son : ' + (on ? 'activé' : 'coupé'),
     statsTitle: n => `Stats de ${n}`, answered: 'Calculs faits', firstTry: 'Justes du premier coup', runs: 'Parties jouées', topLevel: 'Niveau max',
     byOp: 'Par type de calcul', ops: { add: 'Additions', sub: 'Soustractions', mul: 'Multiplications', div: 'Divisions', miss: 'Nombre manquant', mix: 'Calculs mélangés' },
     opLine: (n, avg) => `${n} calculs` + (avg ? `, ${avg} s en moyenne quand c’est juste` : ''), practise: 'À travailler',
@@ -609,6 +616,10 @@ const SPR = {
   heart: [".RR.RR.", "RRRRRRR", "RRRRRRR", ".RRRRR.", "..RRR..", "...R..."],
   potion: ["..WWW..", "...C...", "..CCC..", ".CPPPC.", "CPPPPPC", "CPPWPPC", ".CPPPC.", "..CCC.."],
   coin: [".YYYY.", "YYOYYY", "YYOYYY", "YYOYYY", "YYOYYY", ".YYYY."],
+  wood: ["........", ".BBBBBRR", "BLLLLRYR", "BBBBBBRR", ".BBBBBRR", "BLLLLRYR", "BBBBBBRR", "........"],
+  stone: ["........", "..GGGG..", ".GLLLGG.", "GLLGGGDG", "GGGGGDDG", "GGGDDDDG", ".GDDDDG.", "........"],
+  gem: ["...CC...", "..CLLC..", ".CLLCCC.", "CLLCCCDC", ".CCCCDC.", "..CCDC..", "...DC...", "........"],
+  bag: ["...TT...", "..BTTB..", ".BBBBBB.", "BBLBBBBB", "BLBBBBBB", "BBBBBBBB", ".BBBBBB.", "........"],
   flame: ["..R..", ".RR..", ".RYR.", "RYYR.", "RYWYR", "RYYYR", ".RRR."],
 };
 const PAL = {
@@ -622,42 +633,216 @@ const PAL = {
   heart: { R: '#ff4f6d' }, heartEmpty: { R: '#6a5a86' },
   potion: { W: '#f4ead2', C: '#2b2240', P: '#ff6bd6' },
   coin: { Y: '#ffc83d', O: '#e09a12' },
+  wood: { B: '#8a5a2b', L: '#b07a40', R: '#d9a066', Y: '#8a5a2b' },
+  stone: { G: '#9aa0b0', L: '#c8ccd8', D: '#6b7080' },
+  gem: { C: '#4fd1e8', L: '#c8f6ff', D: '#2a8fb0' },
+  bag: { T: '#5a3a22', B: '#c08850', L: '#e0b080' },
   flame: { R: '#ff7a2f', Y: '#ffc83d', W: '#fff6c8' },
 };
 const SKINS = [
   { H: '#c9d2e3', B: '#4f8cf0', L: '#2c4f9e', cost: 0 },
   { H: '#3f9e4f', B: '#7bd66a', L: '#6b4a2a', req: ['clear', 1, 1] },
-  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', cost: 40 },
+  { H: '#7b4bd6', B: '#a57cf5', L: '#4a2d8a', req: ['built', 2] },
   { H: '#e04848', B: '#f4ead2', L: '#3a3a5a', req: ['clear', 1, 3] },
   { H: '#e8892b', B: '#b5562b', L: '#5a3a22', req: ['streak', 10] },
   { H: '#ffd23f', B: '#ffb000', L: '#c77d00', req: ['streak', 20, null, 7] },
-  { H: '#2b2240', B: '#46466e', L: '#2b2240', cost: 80 },
+  { H: '#2b2240', B: '#46466e', L: '#2b2240', req: ['solved', 100] },
   { H: '#ffd23f', B: '#c0392b', L: '#7b2d8a', req: ['clear', 1, 7] },
   { H: '#9aa7b8', B: '#7f8c9d', L: '#4a5566', req: ['clear', 1, 5] },
-  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', cost: 150 },
+  { H: '#f5d76e', B: '#8e5a2b', L: '#3b4a6b', req: ['built', 6] },
   { H: '#ffffff', B: '#dfe7f2', L: '#8a97a8', req: ['op', 100, 'mul'] },
-  { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', cost: 250 },
+  { H: '#ff8fd0', B: '#7fe0d0', L: '#c77dd8', req: ['built', 12] },
   { H: '#bfe8ff', B: '#6fc3f7', L: '#3b7fc4', req: ['clear', 1, 9] },
   { H: '#ffd23f', B: '#ff4f6d', L: '#ffd23f', req: ['dragons', 20] },
 ];
 const PETS = [
-  { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, cost: 20 },
+  { spr: ['........', '..YYY...', '.YYEYO..', '.YYYYY..', 'YYYYYYY.', '.YYYYY..', '..YYY...', '..O.O...'], pal: { Y: '#ffd84d', E: '#2b2240', O: '#ff8a2f' }, req: ['built', 1] },
   { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'OOPPOO.O', '.OOOO..O', '.OOOOOOO', '.O.O.O..'], pal: { O: '#ff9f43', E: '#2b2240', P: '#ff8fb1' }, req: ['clear', 1, 2] },
-  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, cost: 40 },
+  { spr: ['D....D..', 'DBBBBD..', '.BEBEB..', '.BBNBB..', '..BBB..B', '.BBBBBBB', '.BBBBBB.', '.B.B.B..'], pal: { D: '#7a4a2a', B: '#c98a4a', E: '#2b2240', N: '#2b2240' }, req: ['solved', 50] },
   { spr: ['.W..W...', '.WP.WP..', '.W..W...', 'WWWWWW..', 'WEWWEW..', 'WWPPWW..', '.WWWW.W.', '.W..W...'], pal: { W: '#f4f0ff', P: '#ff8fb1', E: '#2b2240' }, req: ['clear', 1, 4] },
   { spr: ['........', '.GG..GG.', 'GWEGGWEG', 'GGGGGGGG', 'GPGGGGPG', '.GRRRRG.', 'GG.GG.GG', '........'], pal: { G: '#5fd38d', W: '#ffffff', E: '#2b2240', P: '#ff8fb1', R: '#2f9e63' }, req: ['solved', 150] },
   { spr: ['..GGGG..', '.GGGGGG.', 'GGEGGEGG', 'GGGGGGGG', 'GGGPPGGG', 'GGGGGGGG', 'GGGGGGGG', 'G.GG.GG.'], pal: { G: '#cfe6ff', E: '#2b2240', P: '#ff8fb1' }, req: ['room', 15] },
   { spr: ['Y....Y..', '.DDDD...', 'DEDDED..', 'DDDDDD.D', '.DBBD.DD', 'ADBBDAD.', '.DDDD...', '.D..D...'], pal: { Y: '#ffe08a', D: '#ff7a45', E: '#2b2240', B: '#ffe08a', A: '#ffb347' }, req: ['dragons', 5] },
   { spr: ['.B....B.', '.BBBBBB.', 'BWWBBWWB', 'BWEBBEWB', 'BBBYYBBB', '.BCCCCB.', '.BCCCCB.', '..Y..Y..'], pal: { B: '#a0703e', W: '#ffffff', E: '#2b2240', Y: '#ffb000', C: '#e8cfa0' }, req: ['streak', 15, null, 4] },
   { spr: ['........', '..SHS...', '.SHSHS..', 'SHSHSHGG', 'SSSSSSGE', '.G..G...', '........', '........'], pal: { S: '#3f9e4f', H: '#8fcf4a', G: '#b5e07a', E: '#2b2240' }, req: ['clear', 1, 6] },
-  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, cost: 120 },
+  { spr: ['O....O..', 'OO..OO..', 'OOOOOO..', 'OEOOEO..', 'WWNNWW.O', '.WWWW.OO', '.OOOOOOW', '.O.O.O..'], pal: { O: '#ff7a2f', E: '#2b2240', W: '#ffffff', N: '#2b2240' }, req: ['built', 9] },
   { spr: ['..KKKK..', '.KWKKWK.', '.KEWWEK.', '.KWOOWK.', 'KKWWWWKK', '.KWWWWK.', '.KWWWWK.', '..O..O..'], pal: { K: '#3a3a5a', W: '#ffffff', E: '#2b2240', O: '#ffb000' }, req: ['op', 50, 'sub'] },
   { spr: ['........', '...BB...', '..BBBB..', '.BWBBWB.', '.BEBBEB.', 'BBBBBBBB', 'BDBBBBDB', '.DDDDDD.'], pal: { B: '#6fc3f7', D: '#3b7fc4', W: '#ffffff', E: '#2b2240' }, req: ['clear', 1, 8] },
   { spr: ['....Y...', '...YW...', '..WWWP..', '.WEWWWP.', 'WWWWWWP.', '..WWWW..', '.WWWWWW.', '.W.W.W..'], pal: { Y: '#ffd23f', W: '#ffffff', E: '#2b2240', P: '#ff8fd0' }, req: ['clear', 1, 10] },
 ];
 // minimum levels used by streak rewards (a streak only counts answers given at that level or above)
 const STREAK_LEVELS = [...new Set([...SKINS, ...PETS].filter(x => x.req && x.req[0] === 'streak' && x.req[3] > 1).map(x => x.req[3]))];
-const BOOSTS = { heart: 20, potion: 12 };
+/* ================= village ================= */
+const MATS = ['wood', 'stone', 'gem'];
+// x, y: top-left of the 16x16 tile in the 128x96 village scene
+const BUILDINGS = [
+  { cost: { wood: 3 }, x: 55, y: 74 },
+  { cost: { wood: 5 }, x: 30, y: 74 },
+  { cost: { wood: 8 }, x: 80, y: 74 },
+  { cost: { wood: 4, stone: 4 }, x: 6, y: 44 },
+  { cost: { wood: 6, stone: 2 }, x: 104, y: 44 },
+  { cost: { wood: 8, stone: 6 }, x: 30, y: 44 },
+  { cost: { wood: 12, stone: 6, gem: 1 }, x: 80, y: 42 },
+  { cost: { wood: 6, stone: 12, gem: 1 }, x: 10, y: 12 },
+  { cost: { wood: 14, stone: 6, gem: 2 }, x: 55, y: 44 },
+  { cost: { wood: 8, stone: 14, gem: 2 }, x: 102, y: 10 },
+  { cost: { stone: 16, gem: 3 }, x: 32, y: 14 },
+  { cost: { wood: 20, stone: 30, gem: 5 }, x: 56, y: 8 },
+];
+// each building is drawn with plain rectangles on a 16x16 tile
+function paintBld(c, id) {
+  const r = (col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  const tri = (col, cx, top, rows, step) => { for (let i = 0; i < rows; i++) r(col, cx - i * step, top + i, 2 * i * step || 1, 1); };
+  switch (id) {
+    case 0: // campfire
+      r('#9aa0b0', 3, 13, 2, 2); r('#9aa0b0', 11, 13, 2, 2); r('#9aa0b0', 7, 14, 2, 1);
+      r('#8a5a2b', 4, 11, 8, 2); r('#6b4423', 5, 12, 6, 2);
+      r('#ff7a2f', 6, 5, 4, 6); r('#ff7a2f', 7, 3, 2, 2); r('#ffc83d', 7, 7, 2, 4); r('#fff6c8', 7, 9, 1, 2); break;
+    case 1: // tent
+      for (let i = 0; i < 11; i++) r(i % 2 ? '#e8d5a8' : '#f4ead2', 8 - i * .6 | 0, 4 + i, 2 * (i * .6 | 0) + 1, 1);
+      r('#e04848', 7, 4, 2, 11); r('#5a3a22', 7, 10, 2, 5); r('#8a5a2b', 7, 2, 1, 3); r('#e04848', 8, 2, 2, 1); break;
+    case 2: // hut
+      r('#b07a40', 3, 8, 10, 7); r('#8a5a2b', 3, 10, 10, 1); r('#8a5a2b', 3, 13, 10, 1);
+      tri('#e8c050', 8, 2, 7, 1); r('#c99a30', 2, 8, 12, 1);
+      r('#5a3a22', 7, 11, 2, 4); r('#ffe08a', 4, 10, 2, 2); break;
+    case 3: // well
+      r('#8a5a2b', 3, 4, 1, 7); r('#8a5a2b', 12, 4, 1, 7); tri('#c0392b', 8, 1, 4, 2);
+      r('#6b4423', 4, 6, 8, 1); r('#5a3a22', 8, 7, 1, 2); r('#b07a40', 7, 8, 3, 2);
+      r('#9aa0b0', 2, 10, 12, 5); r('#c8ccd8', 2, 10, 12, 1); r('#6b7080', 4, 12, 2, 1); r('#6b7080', 9, 13, 2, 1); r('#4f8cf0', 3, 11, 10, 1); break;
+    case 4: // garden
+      r('#8a5a2b', 1, 7, 14, 8); r('#6b4423', 1, 9, 14, 1); r('#6b4423', 1, 12, 14, 1);
+      for (const [x, y, col] of [[3, 7, '#3fbf74'], [7, 7, '#3fbf74'], [11, 7, '#3fbf74'], [3, 10, '#ff8a2f'], [7, 10, '#3fbf74'], [11, 10, '#ff8a2f'], [5, 13, '#e04848'], [9, 13, '#3fbf74']])
+        { r(col, x, y, 2, 2); r('#2f9e63', x, y - 1, 1, 1); }
+      r('#d9a066', 0, 6, 16, 1); r('#d9a066', 0, 6, 1, 9); r('#d9a066', 15, 6, 1, 9); break;
+    case 5: // bakery
+      r('#f4ead2', 2, 7, 12, 8); tri('#c0392b', 8, 2, 6, 1.2); r('#c0392b', 1, 7, 14, 1);
+      r('#8a5a2b', 11, 1, 2, 4); r('#c8ccd8', 12, 0, 2, 1);
+      r('#5a3a22', 7, 10, 3, 5); r('#ffe08a', 3, 9, 3, 2); r('#e09a12', 3, 12, 3, 2); r('#c98a12', 4, 12, 1, 1); break;
+    case 6: // windmill
+      for (let i = 0; i < 9; i++) r('#c8ccd8', 6 - (i >> 2), 7 + i, 5 + 2 * (i >> 2), 1);
+      r('#8a5a2b', 6, 5, 5, 2); r('#5a3a22', 8, 12, 2, 4);
+      for (let i = 0; i < 6; i++) { r('#f4ead2', 8 - i, 5 - i, 1, 1); r('#f4ead2', 9 + i, 5 - i, 1, 1); r('#f4ead2', 8 - i, 6 + i, 1, 1); r('#f4ead2', 9 + i, 6 + i, 1, 1); }
+      r('#e04848', 8, 5, 2, 2); break;
+    case 7: // forge
+      r('#9aa0b0', 2, 7, 12, 8); r('#6b7080', 2, 10, 12, 1); r('#6b7080', 2, 13, 12, 1);
+      r('#46466e', 1, 4, 14, 3); r('#46466e', 3, 2, 10, 2); r('#6b7080', 11, 0, 2, 3);
+      r('#ff7a2f', 4, 9, 4, 4); r('#ffc83d', 5, 10, 2, 2); r('#2b2240', 10, 12, 4, 1); r('#2b2240', 11, 13, 2, 2); break;
+    case 8: // market
+      r('#8a5a2b', 2, 5, 1, 10); r('#8a5a2b', 13, 5, 1, 10);
+      for (let i = 0; i < 6; i++) r(i % 2 ? '#ffffff' : '#e04848', 1 + i * 2.4 | 0, 3, 3, 3);
+      r('#b07a40', 2, 10, 12, 3); r('#8a5a2b', 2, 13, 12, 1);
+      r('#e04848', 4, 9, 2, 1); r('#ffc83d', 7, 9, 2, 1); r('#3fbf74', 10, 9, 2, 1); break;
+    case 9: // owl tower
+      r('#a57cf5', 5, 5, 6, 10); r('#7b4bd6', 5, 9, 6, 1); r('#7b4bd6', 5, 12, 6, 1);
+      tri('#4a2d8a', 8, 0, 6, 1); r('#ffc83d', 8, 0, 1, 1);
+      r('#2b2240', 6, 6, 4, 3); r('#ffc83d', 6, 7, 1, 1); r('#ffc83d', 9, 7, 1, 1); r('#5a3a22', 7, 12, 2, 3); break;
+    case 10: // fountain
+      r('#9aa0b0', 1, 10, 14, 5); r('#c8ccd8', 1, 10, 14, 1); r('#4f8cf0', 2, 11, 12, 2);
+      r('#c8ccd8', 7, 5, 2, 6); r('#9aa0b0', 5, 5, 6, 1);
+      r('#9fd6ff', 7, 1, 2, 4); r('#9fd6ff', 4, 3, 1, 3); r('#9fd6ff', 11, 3, 1, 3); r('#9fd6ff', 5, 2, 1, 1); r('#9fd6ff', 10, 2, 1, 1); break;
+    case 11: // castle
+      r('#c8ccd8', 1, 6, 14, 9); r('#9aa0b0', 1, 10, 14, 1);
+      r('#9aa0b0', 0, 3, 4, 12); r('#9aa0b0', 12, 3, 4, 12);
+      for (const x of [0, 2, 12, 14]) r('#9aa0b0', x, 2, 1, 1);
+      for (const x of [5, 7, 9]) r('#c8ccd8', x, 5, 1, 1);
+      r('#2b2240', 6, 10, 4, 5); r('#5a3a22', 7, 11, 2, 4); r('#2b2240', 1, 6, 2, 2); r('#2b2240', 13, 6, 2, 2);
+      r('#8a5a2b', 7, 0, 1, 5); r('#ff4f6d', 8, 0, 3, 2); r('#ffc83d', 6, 7, 4, 1); break;
+  }
+}
+const BLD_CACHE = {};
+// 18x18 tile with a dark outline, like the other sprites; ghost = faded silhouette of a building still to build
+function bldTile(id, ghost) {
+  const k = id + (ghost ? 'g' : '');
+  if (BLD_CACHE[k]) return BLD_CACHE[k];
+  const a = document.createElement('canvas'); a.width = a.height = 18;
+  const ac = a.getContext('2d'); ac.translate(1, 1); paintBld(ac, id);
+  const o = document.createElement('canvas'); o.width = o.height = 18;
+  const oc = o.getContext('2d');
+  for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) oc.drawImage(a, dx, dy);
+  oc.globalCompositeOperation = 'source-in'; oc.fillStyle = '#2b2240'; oc.fillRect(0, 0, 18, 18);
+  oc.globalCompositeOperation = 'source-over';
+  if (ghost) { oc.globalAlpha = .25; oc.globalCompositeOperation = 'source-in'; oc.fillRect(0, 0, 18, 18); }
+  else oc.drawImage(a, 0, 0);
+  return (BLD_CACHE[k] = o);
+}
+function bldURL(id, s, ghost) {
+  const c = document.createElement('canvas'); c.width = c.height = 18 * s;
+  const cc = c.getContext('2d'); cc.imageSmoothingEnabled = false; cc.drawImage(bldTile(id, ghost), 0, 0, 18 * s, 18 * s);
+  return c.toDataURL();
+}
+function drawVillage() {
+  const c = $('#villageCv').getContext('2d'), rr = mulberry(7);
+  c.fillStyle = '#7bc86c'; c.fillRect(0, 0, 128, 96);
+  for (let i = 0; i < 70; i++) { c.fillStyle = rr() < .5 ? '#6ab35c' : '#8fd67e'; c.fillRect(rr() * 128 | 0, rr() * 96 | 0, 2, 1); }
+  // path from the bottom edge up to the castle, and a crossing road
+  c.fillStyle = '#e8d5a8'; c.fillRect(60, 26, 8, 70); c.fillRect(0, 62, 128, 6); c.fillRect(14, 30, 100, 5);
+  c.fillStyle = '#d9c08a'; for (let y = 28; y < 96; y += 6) c.fillRect(62, y, 2, 1);
+  // pond and trees around the edge
+  c.fillStyle = '#4f8cf0'; c.fillRect(4, 76, 18, 10); c.fillRect(6, 74, 14, 14); c.fillStyle = '#9fd6ff'; c.fillRect(8, 77, 4, 1);
+  for (const [x, y] of [[118, 74], [108, 84], [120, 28], [2, 30], [116, 2], [2, 2], [96, 88], [36, 90], [44, 2], [86, 2]]) {
+    c.fillStyle = '#5a3a22'; c.fillRect(x + 3, y + 6, 2, 3);
+    c.fillStyle = '#2f9e63'; c.fillRect(x, y + 2, 8, 5); c.fillRect(x + 1, y, 6, 8); c.fillStyle = '#3fbf74'; c.fillRect(x + 2, y + 1, 3, 3);
+  }
+  BUILDINGS.forEach((b, i) => c.drawImage(bldTile(i, !P.built.includes(i)), b.x - 1, b.y - 1));
+}
+$('#villageCv').addEventListener('click', ev => {
+  const rc = ev.currentTarget.getBoundingClientRect();
+  const x = (ev.clientX - rc.left) / rc.width * 128, y = (ev.clientY - rc.top) / rc.height * 96;
+  const i = BUILDINGS.findIndex(b => x >= b.x - 2 && x <= b.x + 18 && y >= b.y - 2 && y <= b.y + 18);
+  if (i >= 0) { sfx('tap'); openBuilding(i); }
+});
+const canBuild = i => !P.built.includes(i) && MATS.every(m => (P.mats[m] || 0) >= (BUILDINGS[i].cost[m] || 0));
+// a row of material icons with counts; need = optional cost to compare against (missing ones in red)
+function matsRow(obj, small, have) {
+  const row = el('span', 'mats' + (small ? ' sm' : ''));
+  for (const m of MATS) {
+    if (!obj[m] && !(have && obj === have)) continue;
+    const sp = el('span', have && (have[m] || 0) < obj[m] ? 'miss' : null), im = el('img', 'px'); im.src = ICON[m]; im.alt = m;
+    sp.append(im, document.createTextNode(String(obj[m] || 0))); row.appendChild(sp);
+  }
+  return row;
+}
+function renderVillage() {
+  drawVillage();
+  const box = $('#buildings'); box.replaceChildren();
+  BUILDINGS.forEach((b, i) => {
+    const done = P.built.includes(i);
+    const card = btn('', 'skin' + (done ? ' built' : canBuild(i) ? ' can' : ''), () => { sfx('tap'); openBuilding(i); });
+    const im = el('img', 'px'); im.alt = ''; im.src = bldURL(i, 3, false); if (!done) im.style.opacity = .55;
+    card.append(im, done ? el('span', null, t('bldNames')[i]) : matsRow(b.cost, true, P.mats));
+    box.appendChild(card);
+  });
+}
+function openBuilding(i) {
+  const b = BUILDINGS[i], name = t('bldNames')[i], done = P.built.includes(i);
+  const big = el('img', 'px big'); big.src = bldURL(i, 5, false); big.alt = '';
+  const nodes = [big, el('h2', null, name)];
+  if (done) nodes.push(el('p', 'req', t('built')));
+  else {
+    const cost = el('div', 'cost'); cost.appendChild(matsRow(b.cost, false, P.mats));
+    nodes.push(cost);
+    const go = btn(t('build'), 'gold', () => {
+      if (!canBuild(i)) return;
+      for (const m of MATS) P.mats[m] -= b.cost[m] || 0;
+      P.built.push(i); sfx('win');
+      const skins0 = P.unlocked.length, pets0 = P.pets.length;
+      checkAchievements(); save(); renderLobby();
+      const out = [big, el('h2', null, t('builtTitle', name))];
+      // outfits and pets won by building show up here, since toasts only live in the dungeon
+      const won = [...P.unlocked.slice(skins0).map(k => ['skin', k]), ...P.pets.slice(pets0).map(k => ['pet', k])];
+      for (const [kind, k] of won) {
+        const im = itemImg(kind, k, true, kind === 'skin' ? 4 : 5); im.style.cssText = 'width:52px;height:52px;margin:0 auto';
+        out.push(im, el('p', null, kind === 'skin' ? t('newOutfit', t('skins')[k]) : t('newPet', t('petNames')[k])));
+      }
+      out.push(btn(t('ok'), 'primary', closeModal));
+      modal(out); $('#modalCard').classList.add('info');
+    });
+    if (!canBuild(i)) { go.disabled = true; nodes.splice(2, 0, el('p', null, t('needMats'))); }
+    nodes.push(go);
+  }
+  nodes.push(btn(t('close'), '', closeModal));
+  modal(nodes); $('#modalCard').classList.add('info');
+}
 const heroPal = i => { const s = SKINS[i] || SKINS[0]; return { H: s.H, B: s.B, L: s.L, S: '#ffd2a6', E: '#2b2240', Y: '#ffc83d', K: '#4a3020' }; };
 const MONSTERS = {
   slime: { name: 'A wobbly slime', pal: PAL.slime, col: '#5fd38d' },
@@ -858,10 +1043,17 @@ function migrate(p) {
   if (!Array.isArray(p.clears)) p.clears = [];
   if (!p.bestAt) p.bestAt = {};
   if (!p.fresh) p.fresh = { skin: [], pet: [] };
+  if (!p.mats) {
+    // gold and bought boosts from before the village become materials
+    const g = (p.wallet || 0) + (p.boosts && p.boosts.heart ? 20 : 0) + (p.boosts && p.boosts.potion ? 12 : 0);
+    p.mats = { wood: Math.floor(g / 4), stone: Math.floor(g / 8), gem: Math.floor(g / 40) };
+    p.wallet = 0; p.boosts = { heart: false, potion: false };
+  }
+  if (!Array.isArray(p.built)) p.built = [];
   p.rating = clamp(Math.floor(p.rating), 1, 10);
   return p;
 }
-const progressOf = (k, o, m) => k === 'streak' && m > 1 ? (P.bestAt[m] || 0) : k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
+const progressOf = (k, o, m) => k === 'built' ? P.built.length : k === 'streak' && m > 1 ? (P.bestAt[m] || 0) : k === 'clear' ? (P.clears.includes(o) ? 1 : 0) : k === 'op' ? (P.opOk[o] || 0) : ({ streak: P.bestStreak, room: P.bestRoom, dragons: P.dragons, solved: P.solved, level: P.maxLv, floor: P.bestFloor })[k] || 0;
 const greyPal = pal => Object.fromEntries(Object.keys(pal).map(k => [k, '#6a5a86']));
 function checkAchievements() {
   SKINS.forEach((s, i) => {
@@ -876,7 +1068,7 @@ function itemImg(kind, i, owned, s) {
   const it = kind === 'skin' ? SKINS[i] : PETS[i];
   const spr = kind === 'skin' ? SPR.hero : it.spr, pal = kind === 'skin' ? heroPal(i) : it.pal;
   const img = el('img', 'px'); img.alt = '';
-  img.src = spriteURL(spr, owned || it.cost ? pal : greyPal(pal), s);
+  img.src = spriteURL(spr, owned ? pal : greyPal(pal), s);
   return img;
 }
 function renderShop(kind) {
@@ -891,13 +1083,12 @@ function renderShop(kind) {
   }
   list.forEach((it, i) => {
     const owned = owns(i);
-    const b = btn('', 'skin' + (cur === i ? ' on' : '') + (owned ? (P.fresh[kind].includes(i) ? ' new' : '') : it.cost ? ' buy' : ' locked'), () => {
+    const b = btn('', 'skin' + (cur === i ? ' on' : '') + (owned ? (P.fresh[kind].includes(i) ? ' new' : '') : ' locked'), () => {
       if (owned) { if (kind === 'skin') P.skin = i; else P.pet = i; P.fresh[kind] = P.fresh[kind].filter(x => x !== i); save(); sfx('tap'); renderLobby(); }
       else openInfo(kind, i);
     });
     b.appendChild(itemImg(kind, i, owned, kind === 'skin' ? 3 : 4));
     if (owned) b.appendChild(el('span', null, (kind === 'skin' ? t('skins') : t('petNames'))[i]));
-    else if (it.cost) { const pr = el('span', 'price'); const c = el('img', 'px'); c.src = ICON.coin; c.alt = ''; pr.append(c, document.createTextNode(it.cost)); b.appendChild(pr); }
     else b.appendChild(el('span', null, '★ ' + t('special')));
     box.appendChild(b);
   });
@@ -907,16 +1098,7 @@ function openInfo(kind, i) {
   const name = (kind === 'skin' ? t('skins') : t('petNames'))[i];
   const big = itemImg(kind, i, false, kind === 'skin' ? 7 : 9); big.classList.add('big');
   const nodes = [big, el('h2', null, name)];
-  if (it.cost) {
-    const buy = btn(t('buy', it.cost), 'gold', () => {
-      if (P.wallet < it.cost) return;
-      P.wallet -= it.cost;
-      if (kind === 'skin') { P.unlocked.push(i); P.skin = i; } else { P.pets.push(i); P.pet = i; }
-      save(); sfx('coin'); closeModal(); renderLobby();
-    });
-    if (P.wallet < it.cost) { buy.disabled = true; nodes.push(el('p', 'req', t('needMore', it.cost - P.wallet))); }
-    nodes.push(buy);
-  } else {
+  {
     const [k, n, o, m] = it.req, c = Math.min(progressOf(k, o, m), n);
     nodes.push(el('p', 'req', t('req', k, n, o, m)));
     if (k !== 'clear') {
@@ -927,26 +1109,6 @@ function openInfo(kind, i) {
   nodes.push(btn(t('close'), '', closeModal));
   modal(nodes); $('#modalCard').classList.add('info');
 }
-function renderBoosts() {
-  const box = $('#boosts'); box.replaceChildren();
-  for (const k of ['heart', 'potion']) {
-    const cost = BOOSTS[k], on = P.boosts[k];
-    const useless = k === 'potion' && potionCap() <= 1;
-    const b = btn('', on ? 'on' : '', () => {
-      if (on) { P.wallet += cost; P.boosts[k] = false; }
-      else if (P.wallet >= cost) { P.wallet -= cost; P.boosts[k] = true; sfx('coin'); }
-      else { b.classList.add('shake'); setTimeout(() => b.classList.remove('shake'), 300); return; }
-      save(); renderLobby();
-    });
-    const ic = el('img', 'px'); ic.src = ICON[k]; ic.alt = '';
-    b.append(ic, el('span', null, t(k === 'heart' ? 'boostHeart' : 'boostPotion')));
-    if (on) b.appendChild(el('small', null, t('boostOn')));
-    else if (useless) { b.appendChild(el('small', null, t('potionMax', potionCap()))); b.disabled = true; }
-    else { const pr = el('small', 'price'); const c = el('img', 'px'); c.src = ICON.coin; c.alt = ''; c.style.cssText = 'width:13px;height:13px'; pr.append(c, document.createTextNode(' ' + cost)); b.appendChild(pr); }
-    box.appendChild(b);
-  }
-}
-
 /* ================= lobby ================= */
 function renderLobby() {
   migrate(P);
@@ -955,19 +1117,20 @@ function renderLobby() {
   const lv = level();
   $('#lobbyLvl').textContent = t('level', lv);
   $('#lobbyLvlDesc').textContent = t('lvDesc')[lv - 1];
-  $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.gold;
+  $('#stRoom').textContent = P.bestRoom; $('#stStreak').textContent = P.bestStreak; $('#stGold').textContent = P.built.length;
   $('#lvVal').textContent = lv; $('#lvDesc').textContent = t('lvDesc')[lv - 1];
-  $('#wallet').textContent = P.wallet; $('#walletIco').src = ICON.coin;
+  $('#wallet').replaceChildren(matsRow(P.mats, false, P.mats));
   const lp = $('#lobbyPet');
   if (P.pet >= 0) { lp.src = spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 5); lp.hidden = false; } else lp.hidden = true;
-  renderShop('skin'); renderShop('pet'); renderBoosts();
+  renderVillage(); renderShop('skin'); renderShop('pet');
   $('#tabSkin').src = spriteURL(SPR.hero, heroPal(P.skin), 3);
   $('#tabPet').src = P.pet >= 0 ? spriteURL(PETS[P.pet].spr, PETS[P.pet].pal, 3) : spriteURL(PETS[0].spr, PETS[0].pal, 3);
-  $('#tabBoost').src = ICON.potion;
+  $('#tabVillage').src = bldURL(2, 1, false);
+  $('#lobbyTabs [data-tab=village]').classList.toggle('new', BUILDINGS.some((b, i) => canBuild(i)));
   for (const k of ['skin', 'pet']) $(`#lobbyTabs [data-tab=${k}]`).classList.toggle('new', P.fresh[k].length > 0);
   setTab(lobbyTab);
 }
-let lobbyTab = 'skin';
+let lobbyTab = 'village';
 function setTab(k) {
   if (k !== lobbyTab) $('#panes').scrollTop = 0;
   lobbyTab = k;
@@ -1146,7 +1309,7 @@ function hud() {
   const h = $('#hudHearts'); h.replaceChildren();
   for (let i = 0; i < R.hp; i++) { const im = el('img', 'px'); im.src = ICON.heart; im.alt = ''; h.appendChild(im); }
   h.setAttribute('aria-label', R.hp + ' hearts');
-  $('#hudPotion').textContent = R.potions; $('#hudGold').textContent = R.gold;
+  $('#hudPotion').textContent = R.potions; $('#hudGold').textContent = MATS.reduce((n, m) => n + R.bag[m], 0);
   $('#hudStreak').textContent = R.streak;
   const im = el('img', 'px'); im.src = ICON.dragon; im.alt = '';
   const dr = $('#hudRoom'); dr.classList.toggle('ready', R.bossNext || (R.room && R.room.type === 'boss'));
@@ -1167,8 +1330,8 @@ function later(fn, ms) { const run = R; setTimeout(() => { if (R === run && !run
 
 function startRun() {
   migrate(P);
-  R = { hp: 3 + (P.boosts.heart ? 1 : 0), maxHp: 5, potions: Math.min(1 + (P.boosts.potion ? 1 : 0), potionCap()), gold: 0, floor: 1, streak: 0, streakAt: {}, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
-  P.boosts = { heart: false, potion: false }; P.fresh = { skin: [], pet: [] }; seenLevel(); save();
+  R = { hp: 3, maxHp: 5, potions: 1, bag: { wood: 0, stone: 0, gem: 0 }, floor: 1, streak: 0, streakAt: {}, toBoss: 0, bossNext: false, depth: 0, solved: 0, n: 0, ok: 0, room: null, phase: 'idle', q: null, over: false };
+  P.fresh = { skin: [], pet: [] }; seenLevel(); save();
   pet.x = 46; pet.y = 140;
   show('scr-game'); fit(); nextRoom();
 }
@@ -1318,9 +1481,10 @@ function resolveRight(ctx) {
       later(() => {
         e.alive = false; fx.shake = now();
         burst(ENC.x, ENC.y, [e.kind === 'boss' ? '#ff7a45' : MONSTERS[e.sprite].col, '#ffffff'], 26);
-        const g = (e.kind === 'boss' ? 5 : 1) * R.floor; R.gold += g;
-        if (e.kind === 'boss') { P.dragons++; if (!P.clears.includes(runLevel())) { P.clears.push(runLevel()); later(() => toast(t('cleared', runLevel()), 'flame'), 300); } later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten', g), 'coin'); sfx('win'); }
-        else { toast(t('gold', g), 'coin'); sfx('coin'); }
+        const got = e.kind === 'boss' ? { gem: dropMult(), wood: 2 * dropMult(), stone: dropMult() } : { wood: 2 * dropMult() };
+        if (e.kind === 'boss') { P.dragons++; if (!P.clears.includes(runLevel())) { P.clears.push(runLevel()); later(() => toast(t('cleared', runLevel()), 'flame'), 300); } later(checkAchievements, 900); if (R.hp < R.maxHp) R.hp++; if (R.potions < potionCap()) { R.potions++; later(() => toast(t('potion'), 'potion'), 500); } toast(t('dragonBeaten'), 'heart'); sfx('win'); }
+        else sfx('coin');
+        loot(got);
         save(); hud();
         say(e.kind === 'boss' ? t('emberGone') : t('poof'));
       }, 260);
@@ -1334,7 +1498,7 @@ function resolveRight(ctx) {
       e.opened = true; sfx('coin');
       burst(ENC.x, ENC.y - 6, ['#ffc83d', '#fff3a6', '#ffffff'], 22, true);
       if (R.potions < potionCap() && Math.random() < (e.golden ? .5 : .35)) { R.potions++; toast(t('potion'), 'potion'); }
-      else { const g = (e.golden ? rnd(5, 8) : rnd(2, 4)) * R.floor; R.gold += g; toast(t('gold', g), 'coin'); }
+      else loot(e.golden ? { stone: rnd(2, 3) * dropMult(), wood: 2 * dropMult() } : { stone: rnd(1, 2) * dropMult() });
       save(); hud(); say(t('chestOpen'));
       later(showDoors, 1100);
     } else {
@@ -1468,21 +1632,24 @@ function renderStats() {
 function modal(nodes) { $('#modalCard').replaceChildren(...nodes); $('#modal').hidden = false; }
 function closeModal() { $('#modal').hidden = true; $('#modalCard').classList.remove('info'); }
 function seenLevel() { const st = stats(P); st.maxLv = Math.max(st.maxLv || 0, level()); P.maxLv = Math.max(P.maxLv || 0, level()); }
-function bank(g) { P.wallet += g; P.gold += g; save(); }
-const halfBag = () => Math.floor(R.gold / 2);
+// deeper floors and higher levels give more: +1 per floor, +1 per three levels
+const dropMult = () => R.floor + Math.floor((runLevel() - 1) / 3);
+function loot(got) { for (const m of MATS) if (got[m]) { R.bag[m] += got[m]; toast('+' + got[m], m); } }
+function bank(bag) { for (const m of MATS) P.mats[m] = (P.mats[m] || 0) + bag[m]; save(); }
+const halfBag = () => Object.fromEntries(MATS.map(m => [m, Math.floor(R.bag[m] / 2)]));
 function floorCleared() {
   R.phase = 'floor'; P.bestFloor = Math.max(P.bestFloor || 0, R.floor); checkAchievements(); $('#qbox').hidden = true; setAnswers('', []); aside(null); say('');
   modal([
     el('h2', null, t('floorCleared', R.floor)),
-    el('p', null, t('bag', R.gold)),
+    el('p', null, t('bag')), matsRow(R.bag, false, R.bag),
     el('p', null, t('stopOrMore')),
     ...(runLevel() < 10 ? [btn(t('goHarder', runLevel() + 1, t('lvDesc')[runLevel()]), 'primary', () => {
       closeModal(); R.floor++; P.rating = runLevel() + 1; R.potions = Math.min(R.potions, potionCap()); seenLevel(); save(); hud(); toast(t('floorStart', runLevel()), 'flame'); showDoors();
     })] : []),
     btn(t('goSame', runLevel()), '', () => { closeModal(); R.floor++; hud(); toast(t('floorSame', R.floor), 'flame'); showDoors(); }),
-    btn(t('goHome', R.gold), 'gold', () => {
-      closeModal(); const g = R.gold, r = R.depth; bank(g); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby');
-      modal([el('h2', null, t('homeTitle')), el('p', null, t('homeBody', r, g)), btn(t('ok'), 'primary', closeModal)]);
+    btn(t('goHome'), 'gold', () => {
+      closeModal(); const g = R.bag, r = R.depth; bank(g); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby');
+      modal([el('h2', null, t('homeTitle')), el('p', null, t('homeBody', r)), matsRow(g, false, g), btn(t('ok'), 'primary', closeModal)]);
     }),
   ]);
 }
@@ -1493,7 +1660,7 @@ function gameOver() {
   modal([
     im,
     el('h2', null, t('napTitle')),
-    el('p', null, t('napBody', R.depth, R.solved, R.gold, kept)),
+    el('p', null, t('napBody', R.depth, R.solved)), matsRow(kept, false, kept),
     btn(t('playAgain'), 'primary', () => { closeModal(); startRun(); }),
     btn(t('backHero'), '', () => { closeModal(); R = null; renderLobby(); show('scr-lobby'); }),
   ]);
@@ -1505,7 +1672,7 @@ function pause() {
     el('h2', null, t('paused')),
     btn(t('resume'), 'primary', resume),
     btn(t('sound', store.sound), '', function () { store.sound = !store.sound; save(); this.textContent = t('sound', store.sound); }),
-    btn(t('leave', halfBag()), '', () => { closeModal(); paused = false; bank(halfBag()); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby'); }),
+    btn(t('leaveBag'), '', () => { closeModal(); paused = false; bank(halfBag()); endRun(); R.over = true; R = null; renderLobby(); show('scr-lobby'); }),
   ]);
 }
 function resume() {
@@ -1545,7 +1712,8 @@ ICON.potion = spriteURL(SPR.potion, PAL.potion, 3);
 ICON.coin = spriteURL(SPR.coin, PAL.coin, 3);
 ICON.flame = spriteURL(SPR.flame, PAL.flame, 3);
 ICON.dragon = spriteURL(SPR.dragon, PAL.dragon, 2);
-$('#icoPotion').src = ICON.potion; $('#icoCoin').src = ICON.coin; $('#icoFlame').src = ICON.flame;
+for (const m of [...MATS, 'bag']) ICON[m] = spriteURL(SPR[m], PAL[m], 3);
+$('#icoPotion').src = ICON.potion; $('#icoBag').src = ICON.bag; $('#icoFlame').src = ICON.flame;
 load();
 applyLang();
 renderTitle();
